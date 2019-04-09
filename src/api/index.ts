@@ -1,38 +1,29 @@
 import * as Koa from "koa";
 import "reflect-metadata";
 
-import { useContainer, useKoaServer } from "routing-controllers";
-import { Container } from "typedi";
+import {Action, useContainer, useKoaServer} from "routing-controllers";
+import {Container} from "typedi";
 
-import * as controllers from "./controllers";
+import * as controllers from "./controllers/index";
 
-import { useMiddlewares } from "./middlewares";
-import { createServer, Server } from "http";
+import {useMiddlewares} from "./middlewares";
+import {createServer, Server} from "http";
+import {getRedisKey, redis} from "../logic/service/redis";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
 
-class Application {
-    private app: Koa;
+export class ApiApplication {
+    private api: Koa;
     private server: Server;
 
     constructor() {
-        this.app = new Koa();
-
-        useContainer(Container);
-
-        this.server = createServer(this.app.callback());
-        this.init();
-    }
-
-    public start(port: number) {
-        this.app.listen(port, (): void => {
-            console.log(`Koa server has started, running with: http://127.0.0.1:${port}. `);
-        });
+        this.api = new Koa();
+        this.server = createServer(this.api.callback());
     }
 
     private init() {
-        this.app.use(async (ctx: Koa.Context, next: Function) => {
+        this.api.use(async (ctx: Koa.Context, next: Function) => {
             try {
                 await next();
             } catch (error) {
@@ -46,17 +37,47 @@ class Application {
             }
         });
 
-        useMiddlewares(this.app, 'dev');
+        useMiddlewares(this.api, process.env.NODE_ENV || "development");
 
-        this.app = useKoaServer<Koa>(this.app, {
+        this.api = useKoaServer<Koa>(this.api, {
+            cors: true,
             routePrefix: "/v1",
             validation: true,
             controllers: objectToArray(controllers),
             classTransformer: false,
+            currentUserChecker: async (action: Action) => {
+                const server_id = action.request.headers.server_id;
+                console.log("serverId", server_id);
+                if (server_id) {
+                    const redisKey = getRedisKey('server', server_id);
+                    const uid = await redis().get(redisKey);
+                    if (uid) {
+                        await redis().set(redisKey, uid, "EX", 7200);
+                        return uid;
+                    }
+                }
+            },
+            authorizationChecker: async (action: Action, roles: string[]) => {
+                const server_id = action.request.headers.server_id;
+                console.log("serverId", action.request.headers, server_id);
+                if (server_id) {
+                    const redisKey = getRedisKey('server', server_id);
+                    const uid = await redis().get(redisKey);
+                    if (uid) {
+                        return true;
+                    }
+                }
+                return false; // todo: server authority
+            }
+
         });
         useContainer(Container);
     }
-}
 
-const app = new Application();
-app.start(6002);
+    public start(port: number): Server {
+        this.init();
+        return this.api.listen(port, (): void => {
+            console.log(`Koa server has started, running at: http://127.0.0.1:${port}. `);
+        });
+    }
+}

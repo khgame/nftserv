@@ -1,16 +1,16 @@
-import {Get, JsonController} from "routing-controllers";
-import {Service} from "typedi";
+import {API, Get} from "../decorators";
 
-@Service()
-@JsonController("/core")
-export class CoreController {
+@API("/core")
+export class ServerController {
+
     constructor() {
     }
 
     @Get("/info")
-    public async getRules() {
+    public async getInfo() {
         return {
-            version: 1
-        };
+            version: "0.1.0",
+        }; // mock todo
     }
+
 }

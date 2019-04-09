@@ -1,0 +1,20 @@
+{
+  "port": 11821,
+  "mongo": {
+    "host": "127.0.0.1",
+    "port": 27017,
+    "usr": "",
+    "pwd": "",
+    "db": "khgame_login_svr"
+  },
+  "redis": {
+    "db": 0,
+    "family": 4,
+    "host": "127.0.0.1",
+    "port": 6379,
+    "app_key": "KH_NFTServ_default_redisKey"
+  },
+  "login": {
+    "host": "http://127.0.0.1:11601"
+  }
+}

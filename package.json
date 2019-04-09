@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "cross-env nodemon --inspect --watch 'src/**/*' -e ts,tsx --exec 'node -r ts-node/register' ./src/api"
+    "watch": "cross-env nodemon --inspect --watch 'src/**/*' -e ts,tsx --exec 'node -r ts-node/register' ./src/app start"
   },
   "repository": {
     "type": "git",
@@ -24,19 +24,25 @@
     }
   ],
   "dependencies": {
+    "@types/fs-extra": "^5.0.5",
+    "@types/ioredis": "^4.0.10",
+    "fs-extra": "^7.0.1",
+    "ioredis": "^4.9.0",
+    "kcors": "^2.2.2",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-logger": "^3.2.0",
     "koa-router": "^7.4.0",
+    "path": "^0.12.7",
     "routing-controllers": "^0.7.7",
-    "typedi": "^0.8.0"
+    "typedi": "^0.8.0",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
-    "@koa/cors": "^3.0.0",
+    "@types/kcors": "^2.2.3",
     "@types/koa": "^2.0.48",
     "@types/koa-bodyparser": "^4.2.2",
     "@types/koa-logger": "^3.1.1",
-    "@types/koa__cors": "^2.2.3",
     "cross-env": "^5.2.0",
     "nodemon": "^1.18.10",
     "ts-node": "^8.0.3",

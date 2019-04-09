@@ -1,15 +1,12 @@
 import * as Koa from "koa";
-import * as cors from "@koa/cors";
 import * as bodyParser from "koa-bodyparser";
 import * as logger from "koa-logger";
 
 const apply: { [key: string]: () => Koa.Middleware[] } = {
-    ["prod"]: () => [
-        cors(),
+    ["production"]: () => [
         bodyParser()
     ],
-    ["dev"]: () => [
-        cors(),
+    ["development"]: () => [
         bodyParser(),
         logger(),
     ]
@@ -18,6 +15,6 @@ const apply: { [key: string]: () => Koa.Middleware[] } = {
 export const useMiddlewares = (app: Koa, applyGroup: string): Koa => {
     return apply[applyGroup]().reduce((_, m) => {
         _.use(m);
-        return _
+        return _;
     }, app);
 };
