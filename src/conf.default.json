@@ -14,7 +14,7 @@
     "family": 4,
     "host": "127.0.0.1",
     "port": 6379,
-    "app_key": "KH_NFTServ_default_redisKey"
+    "keyPrefix": "KH_NFTServ_default_redisKey:"
   },
   "rpc": {
     "login": {
@@ -24,6 +24,11 @@
         "online_state": "/session/online_state",
         "game_svr_list": "/game_svr/list"
       }
+    }
+  },
+  "rules": {
+    "shelf": {
+      "channels": [ "hero" ]
     }
   }
 }
