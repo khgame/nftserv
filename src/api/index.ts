@@ -9,6 +9,7 @@ import * as controllers from "./controllers/index";
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
 import {getRedisKey, redis} from "../logic/service/redis";
+import {getOnlineState} from "../logic/service/login";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
@@ -46,24 +47,23 @@ export class ApiApplication {
             controllers: objectToArray(controllers),
             classTransformer: false,
             currentUserChecker: async (action: Action) => {
-                const server_id = action.request.headers.server_id;
-                console.log("serverId", server_id);
-                if (server_id) {
-                    const redisKey = getRedisKey('server', server_id);
-                    const uid = await redis().get(redisKey);
-                    if (uid) {
-                        await redis().set(redisKey, uid, "EX", 7200);
-                        return uid;
+                const session_id = action.request.headers.session_id;
+                // console.log("session_id", session_id);
+                if (session_id) {
+                    const onlineState = await getOnlineState(session_id);
+                    if (onlineState.status === 200) {
+                        // console.log("onlineState", onlineState);
+                        return onlineState.result.validatorIdentity + "::" + onlineState.result.userIdentity;
                     }
                 }
             },
             authorizationChecker: async (action: Action, roles: string[]) => {
                 const server_id = action.request.headers.server_id;
-                console.log("serverId", action.request.headers, server_id);
+                // console.log("serverId", action.request.headers, server_id);
                 if (server_id) {
                     const redisKey = getRedisKey('server', server_id);
-                    const uid = await redis().get(redisKey);
-                    if (uid) {
+                    const serverId = await redis().get(redisKey);
+                    if (serverId) {
                         return true;
                     }
                 }

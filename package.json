@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
     "watch": "cross-env nodemon --inspect --watch 'src/**/*' -e ts,tsx --exec 'node -r ts-node/register' ./src/app start"
   },
   "repository": {
@@ -24,8 +25,10 @@
     }
   ],
   "dependencies": {
+    "@types/axios": "^0.14.0",
     "@types/fs-extra": "^5.0.5",
     "@types/ioredis": "^4.0.10",
+    "axios": "^0.18.0",
     "fs-extra": "^7.0.1",
     "ioredis": "^4.9.0",
     "kcors": "^2.2.2",
@@ -33,9 +36,11 @@
     "koa-bodyparser": "^4.2.1",
     "koa-logger": "^3.2.0",
     "koa-router": "^7.4.0",
+    "mongodb": "^3.2.3",
     "path": "^0.12.7",
     "routing-controllers": "^0.7.7",
     "typedi": "^0.8.0",
+    "typeorm": "^0.2.16",
     "winston": "^3.2.1"
   },
   "devDependencies": {

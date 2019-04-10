@@ -3,9 +3,9 @@
   "mongo": {
     "host": "127.0.0.1",
     "port": 27017,
-    "usr": "",
-    "pwd": "",
-    "db": "khgame_login_svr"
+    "database": "khgame_nft_svr",
+    "username": "",
+    "password": ""
   },
   "redis": {
     "db": 0,
@@ -15,6 +15,7 @@
     "app_key": "KH_NFTServ_default_redisKey"
   },
   "login": {
-    "host": "http://127.0.0.1:11601"
+    "host": "http://127.0.0.1:11801",
+    "api": "/v1/session/online_state"
   }
 }

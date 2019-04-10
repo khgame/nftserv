@@ -7,5 +7,5 @@ export const redis = () => {
 };
 export const getRedisKey =
     (...keys: string[]) =>
-        keys.reduce((_, s) => `${_}:${s}`, Global.conf.redis.app_key || 'KHGame_default_redisKey');
+        keys.reduce((_, s) => `${_}:${s}`, Global.conf.redis.app_key || 'KH_default_redisKey');
 
