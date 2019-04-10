@@ -24,55 +24,64 @@ export class NftController {
     @Post("/shelf")
     public async shelf(
         @Ctx() ctx: Context,
-        @CurrentUser() userId: string,
+        @CurrentUser() id: { uid: string, sid: string },
         @Body() body: {
             nft_id: string
             shelf_channel: string
             shelf_price: number
         }) {
-        ctx.assert.ok(userId, "invalid user");
-        return await this.nftService.shelf(userId, body.nft_id, body.shelf_channel, body.shelf_price);
+        ctx.assert.ok(id.uid, "invalid user");
+        return await this.nftService.shelf(id.uid, body.nft_id, body.shelf_channel, body.shelf_price);
     }
 
     @Post("/unshelf")
     public async unshelf(
         @Ctx() ctx: Context,
-        @CurrentUser() userId: string,
+        @CurrentUser() id: { uid: string, sid: string },
         @Body() body: {
             nft_id: string
         }) {
-        ctx.assert.ok(userId, "invalid user");
-        return await this.nftService.unshelf(userId, body.nft_id);
+        ctx.assert.ok(id.uid, "invalid user");
+        return await this.nftService.unshelf(id.uid, body.nft_id);
     }
 
     @Post("/lock")
     @Authorized("GAME_SERVER")
-    public async lock(@Body() body: {
-        server_id: string
-        nft_id: string
-    }) {
-        return await this.nftService.lock(body.server_id, body.nft_id);
+    public async lock(
+        @Ctx() ctx: Context,
+        @CurrentUser() id: { uid: string, sid: string },
+        @Body() body: {
+            nft_id: string
+        }) {
+        ctx.assert.ok(id.sid, "invalid server id");
+        return await this.nftService.lock(id.sid, body.nft_id);
     }
 
     @Post("/unlock")
     @Authorized("GAME_SERVER")
-    public async unlock(@Body() body: {
-        server_id: string
-        nft_id: string
-    }) {
-        return await this.nftService.unlock(body.server_id, body.nft_id);
+    public async unlock(
+        @Ctx() ctx: Context,
+        @CurrentUser() id: { uid: string, sid: string },
+        @Body() body: {
+            nft_id: string
+        }) {
+        ctx.assert.ok(id.sid, "invalid server id");
+        return await this.nftService.unlock(id.sid, body.nft_id);
     }
 
     @Post("/transfer")
     @Authorized("GAME_SERVER")
-    public async transfer(@Body() body: {
-        server_id: string
-        from: string
-        to: string
-        nft_id: string
-        memo: string
-    }) {
-        return await this.nftService.transfer(body.server_id, body.from, body.to, body.nft_id, body.memo);
+    public async transfer(
+        @Ctx() ctx: Context,
+        @CurrentUser() id: { uid: string, sid: string },
+        @Body() body: {
+            from: string
+            to: string
+            nft_id: string
+            memo: string
+        }) {
+        ctx.assert.ok(id.sid, "invalid server id");
+        return await this.nftService.transfer(id.sid, body.from, body.to, body.nft_id, body.memo);
     }
 
     @Post("/update")
@@ -88,30 +97,30 @@ export class NftController {
     @Post("/consume")
     @Authorized("GAME_SERVER")
     public async consume(@Ctx() ctx: Context,
-                         @CurrentUser() userId: string,
                          @Body() body: {
                              nft_id: string
                          }) {
-        ctx.assert.ok(userId, "invalid user");
         return this.nftService.burn(body.nft_id); // mock todo
     }
 
     @Post("/produce")
     @Authorized("GAME_SERVER")
     public async produce(@Ctx() ctx: Context,
-                         @CurrentUser() userId: string,
                          @Body() body: {
+                             uid: string
                              data: string
                          }) {
-        ctx.assert.ok(userId, "invalid user");
-        return await this.nftService.produce(userId, body.data);
+        ctx.assert.ok(body.uid, "invalid user");
+        return await this.nftService.produce(body.uid, body.data);
     }
 
     @Post("/transaction")
     @Authorized("GAME_SERVER")
-    public async transaction(@CurrentUser() userId: string, @Body() body: {
-        actions: Array<{ op: string, args: string[] }>
-    }) {
+    public async transaction(
+        @CurrentUser() userId: string,
+        @Body() body: {
+            actions: Array<{ op: string, args: string[] }>
+        }) {
         return {
             ok: true
         }; // mock todo

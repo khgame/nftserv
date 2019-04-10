@@ -47,15 +47,18 @@ export class ApiApplication {
             controllers: objectToArray(controllers),
             classTransformer: false,
             currentUserChecker: async (action: Action) => {
+                const server_id = action.request.headers.server_id;
                 const session_id = action.request.headers.session_id;
                 // console.log("session_id", session_id);
+                const result: any = {sid: server_id};
                 if (session_id) {
                     const onlineState = await getOnlineState(session_id);
                     if (onlineState.status === 200) {
-                        // console.log("onlineState", onlineState);
-                        return onlineState.result.validatorIdentity + "::" + onlineState.result.userIdentity;
+                        console.log("onlineState", onlineState);
+                        result.uid = onlineState.result.uid;
                     }
                 }
+                return result;
             },
             authorizationChecker: async (action: Action, roles: string[]) => {
                 const server_id = action.request.headers.server_id;
