@@ -10,8 +10,8 @@ export const initDB = async () => {
         useNewUrlParser: true,
         entities: Object.keys(entities).map((name) => (entities as any)[name]),
     };
-    console.log("init db : ", options)
+    console.log("init db : ", options);
     return createConnection(options)
         .then(() => console.log("mongodb connect success"))
         .catch((error: any) => console.log(error));
-}
+};

@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "app": "npx ts-node ./src/app",
+    "lint": "npx tslint --fix --project .",
     "watch": "cross-env nodemon --inspect --watch 'src/**/*' -e ts,tsx --exec 'node -r ts-node/register' ./src/app start"
   },
   "repository": {

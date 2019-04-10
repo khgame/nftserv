@@ -1,4 +1,6 @@
 {
+  "server_id": "khg_nft",
+  "server_hash": 0,
   "port": 11821,
   "mongo": {
     "host": "127.0.0.1",
@@ -14,8 +16,14 @@
     "port": 6379,
     "app_key": "KH_NFTServ_default_redisKey"
   },
-  "login": {
-    "host": "http://127.0.0.1:11801",
-    "api": "/v1/session/online_state"
+  "rpc": {
+    "login": {
+      "host" : "http://127.0.0.1:11801",
+      "root" : "/v1",
+      "api" : {
+        "online_state": "/session/online_state",
+        "game_svr_list": "/game_svr/list"
+      }
+    }
   }
 }

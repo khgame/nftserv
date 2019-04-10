@@ -9,7 +9,7 @@ import * as controllers from "./controllers/index";
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
 import {getRedisKey, redis} from "../logic/service/redis";
-import {getOnlineState} from "../logic/service/login";
+import {getGameServers, getOnlineState} from "../logic/service/login";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
@@ -60,14 +60,22 @@ export class ApiApplication {
             authorizationChecker: async (action: Action, roles: string[]) => {
                 const server_id = action.request.headers.server_id;
                 // console.log("serverId", action.request.headers, server_id);
-                if (server_id) {
-                    const redisKey = getRedisKey('server', server_id);
-                    const serverId = await redis().get(redisKey);
-                    if (serverId) {
-                        return true;
-                    }
+                if (!server_id) {
+                    return false;
                 }
-                return false; // todo: server authority
+
+                const rsp = await getGameServers();
+                if (rsp.status !== 200) {
+                    return false;
+                }
+
+                const gameServers: Array<{ identity: string }> = rsp.result;
+                const server = gameServers.find(v => v.identity === server_id); // this serve is exist in the game server list
+
+                // console.log("gameServers", gameServers);
+                // todo: don't use static id
+
+                return !!server; // todo: server authority
             }
 
         });
