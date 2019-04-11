@@ -19,7 +19,7 @@ export class AdminController {
             idempotent_hash: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.adminService.lock(body.nft_id, body.idempotent_hash, sid);
+        // return await this.adminService.lock(body.nft_id, body.idempotent_hash, sid);
     }
 
     @Post("/unlock")
@@ -31,7 +31,7 @@ export class AdminController {
             nft_id: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.adminService.unlock(body.nft_id, sid);
+        // return await this.adminService.unlock(body.nft_id, sid);
     }
 
     @Post("/transfer")
@@ -74,17 +74,18 @@ export class AdminController {
         return this.adminService.burn(body.nft_id); // mock todo
     }
 
-    @Post("/produce")
+    @Post("/issue")
     @Authorized("GAME_SERVER")
-    public async produce(
+    public async issue(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
             uid: string
             data: string
+            logic_mark: string
         }) {
         ctx.assert.ok(sid, "invalid user");
-        return await this.adminService.produce(sid, body.data);
+        return await this.adminService.issue(sid, body.data, body.logic_mark);
     }
 
     @Post("/transaction")

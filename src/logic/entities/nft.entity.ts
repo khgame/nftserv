@@ -13,6 +13,9 @@ export class NftEntity extends BaseEntity {
     public uid: string;
 
     @Column()
+    public logic_mark: string; // to index nfts
+
+    @Column()
     @IsDefined()
     public data: any;
 
@@ -28,7 +31,7 @@ export class NftEntity extends BaseEntity {
     @Column()
     public lock_by: string = "";
 
-    constructor(uid: string, data: object) {
+    constructor(uid: string, data: object, logic_mark: string = "") {
         super();
         this.uid = uid;
         this.data = data;

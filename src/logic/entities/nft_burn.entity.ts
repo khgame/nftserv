@@ -14,6 +14,9 @@ export class NftBurnEntity extends BaseEntity {
     public uid: string;
 
     @Column()
+    public logic_mark: string;
+
+    @Column()
     @IsDefined()
     public data: any;
 
@@ -38,6 +41,7 @@ export class NftBurnEntity extends BaseEntity {
         this.uid = nftData.uid;
         this.data = nftData.data;
         this.created_at = nftData.created_at;
+        this.logic_mark = nftData.logic_mark;
         this.lock_by = nftData.lock_by;
     }
 }
