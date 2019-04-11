@@ -8,7 +8,7 @@ export class NftController {
     constructor(public readonly nftService: NftService) {
     }
 
-    @Get("/list/:user_id")
+    @Get("/list/:uid")
     public async list(@Param("uid") uid: string) {
         // console.log("uid call list", uid);
         return await this.nftService.list(uid);

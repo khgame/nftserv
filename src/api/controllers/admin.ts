@@ -9,44 +9,30 @@ export class AdminController {
     constructor(public readonly adminService: AdminService) {
     }
 
-    @Post("/lock")
+    @Post("/issue")
     @Authorized(["SERVICE", "GM"])
-    public async lock(
+    public async issue(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
-            nft_id: string
-            idempotent_hash: string
+            uid: string
+            data: string
+            logic_mark: string
         }) {
-        ctx.assert.ok(sid, "invalid server id");
-        // return await this.adminService.lock(body.nft_id, body.idempotent_hash, sid);
+        ctx.assert.ok(sid, "invalid user");
+        return await this.adminService.issue(sid, body.data, body.logic_mark);
     }
 
-    @Post("/unlock")
+    @Post("/burn")
     @Authorized(["SERVICE", "GM"])
-    public async unlock(
+    public async consume(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
             nft_id: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        // return await this.adminService.unlock(body.nft_id, sid);
-    }
-
-    @Post("/transfer")
-    @Authorized(["SERVICE", "GM"])
-    public async transfer(
-        @Ctx() ctx: Context,
-        @CurrentUser() {sid}: { sid: string },
-        @Body() body: {
-            from: string
-            to: string
-            nft_id: string
-            memo: string
-        }) {
-        ctx.assert.ok(sid, "invalid server id");
-        return await this.adminService.transfer(sid, body.from, body.to, body.nft_id, body.memo);
+        return this.adminService.burn(body.nft_id); // mock todo
     }
 
     @Post("/update")
@@ -62,30 +48,19 @@ export class AdminController {
         return await this.adminService.update(sid, body.nft_id, body.data);
     }
 
-    @Post("/burn")
+    @Post("/transfer")
     @Authorized(["SERVICE", "GM"])
-    public async consume(
+    public async transfer(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
+            from: string
+            to: string
             nft_id: string
+            memo: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return this.adminService.burn(body.nft_id); // mock todo
-    }
-
-    @Post("/issue")
-    @Authorized(["SERVICE", "GM"])
-    public async issue(
-        @Ctx() ctx: Context,
-        @CurrentUser() {sid}: { sid: string },
-        @Body() body: {
-            uid: string
-            data: string
-            logic_mark: string
-        }) {
-        ctx.assert.ok(sid, "invalid user");
-        return await this.adminService.issue(sid, body.data, body.logic_mark);
+        return await this.adminService.transfer(sid, body.from, body.to, body.nft_id, body.memo);
     }
 
     @Post("/transaction")
