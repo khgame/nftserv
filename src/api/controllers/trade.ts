@@ -12,25 +12,25 @@ export class TradeController {
     @Post("/shelf")
     public async shelf(
         @Ctx() ctx: Context,
-        @CurrentUser() id: { uid: string, sid: string },
+        @CurrentUser() {uid}: { uid: string },
         @Body() body: {
             nft_id: string
             shelf_channel: string
             shelf_price: number
         }) {
-        ctx.assert.ok(id.uid, "invalid user");
-        return await this.tradeService.shelf(id.uid, body.nft_id, body.shelf_channel, body.shelf_price);
+        ctx.assert.ok(uid, "invalid user");
+        return await this.tradeService.shelf(uid, body.nft_id, body.shelf_channel, body.shelf_price);
     }
 
     @Post("/unshelf")
     public async unshelf(
         @Ctx() ctx: Context,
-        @CurrentUser() id: { uid: string, sid: string },
+        @CurrentUser() {uid}: { uid: string },
         @Body() body: {
             nft_id: string
         }) {
-        ctx.assert.ok(id.uid, "invalid user");
-        return await this.tradeService.unshelf(id.uid, body.nft_id);
+        ctx.assert.ok(uid, "invalid user");
+        return await this.tradeService.unshelf(uid, body.nft_id);
     }
 
 }
