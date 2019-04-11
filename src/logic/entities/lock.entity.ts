@@ -25,7 +25,7 @@ export class LockEntity extends BaseEntity {
     public idempotent_hash: string;
 
     @Column()
-    public nft_id: ObjectID;
+    public nft_id: ObjectID; // todo: indexing
 
     @Column()
     public state: LockStatus = LockStatus.INITIALED;
@@ -68,7 +68,7 @@ export class LockFinishedEntity extends BaseEntity {
     public id: ObjectID;
 
     @Column()
-    public nft_id: ObjectID;
+    public nft_id: string;
 
     @Column()
     public state: LockStatus = LockStatus.FINISHED_STATES;

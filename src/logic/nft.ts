@@ -1,6 +1,7 @@
 import {Service} from "typedi";
-import {NftBurnEntity, NftEntity} from "./entities";
+import {NftBurnEntity, NftEntity, Operation} from "./entities";
 import {redisLock, redisUnlock} from "./service/redis";
+import {OperationEntity} from "./entities/operation.entity";
 
 @Service()
 export class NftService {
@@ -11,8 +12,10 @@ export class NftService {
         console.log("Service: instance created ", NftService.inst);
     }
 
-    async list(uid: string) {
-        const nftds = await NftEntity.find({uid});
+    async list(uid: string, logic_mark: string = "") {
+        const nftds = logic_mark ?
+            await NftEntity.find({logic_mark, uid}) :
+            await NftEntity.find({uid});
         return nftds;
     }
 
@@ -27,9 +30,31 @@ export class NftService {
         return nftd;
     }
 
-    async issue(uid: string, data: any, logic_mark: string = "") {
-        const nftd = new NftEntity(uid, data, logic_mark);
-        return await nftd.save();
+    /**
+     * issue an nft to a user
+     * @param {string} nftId - should be 24 characters random hash
+     * @param {string} uid - user identity from the login server cluster
+     * @param data - any data
+     * @param {string} logic_mark - can be genre or something else, for indexing
+     * @return {Promise<BaseEntity>}
+     */
+    async issue(nftId: string, uid: string, data: any, logic_mark: string = "") {
+        let op = await OperationEntity.findOne({op: Operation.ISSUE, nft_id: nftId});
+        if (op) {
+            return op;
+        }
+
+        const nftd = new NftEntity(nftId, uid, data, logic_mark);
+        op = new OperationEntity(nftId, Operation.ISSUE, {
+            uid,
+            data,
+            logic_mark
+        });
+        await Promise.all([
+            op.save(), // todo: error check, WAL
+            nftd.save()
+        ]);
+        return op;
     }
 
     async burn(nftId: string) {

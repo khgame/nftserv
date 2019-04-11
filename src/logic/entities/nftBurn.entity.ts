@@ -1,13 +1,13 @@
 import {IsDefined} from "class-validator";
 import {
-    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn,
+    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryColumn,
 } from "typeorm";
 import {NftEntity} from "./nft.entity";
 
 @Entity("nft_burn")
 export class NftBurnEntity extends BaseEntity {
 
-    @ObjectIdColumn()
+    @PrimaryColumn()
     public id: ObjectID;
 
     @Column()

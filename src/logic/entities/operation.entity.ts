@@ -11,7 +11,7 @@ export enum Operation {
 
 
 @Entity("ops")
-export class operationEntity extends BaseEntity { // todo
+export class OperationEntity extends BaseEntity { // todo
 
     @ObjectIdColumn()
     public id: ObjectID;
@@ -20,13 +20,18 @@ export class operationEntity extends BaseEntity { // todo
     public nft_id: ObjectID;
 
     @Column()
-    public op: string;
+    public op: Operation;
+
+    @Column()
+    public params: any;
 
     @CreateDateColumn()
     public created_at: Date;
 
-    constructor(nft_id: string) {
+    constructor(nft_id: string, op: Operation, params: any) {
         super();
         this.nft_id = new ObjectID(nft_id);
+        this.op = op;
+        this.params = params;
     }
 }
