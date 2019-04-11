@@ -10,7 +10,7 @@ export class AdminController {
     }
 
     @Post("/lock")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async lock(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -23,7 +23,7 @@ export class AdminController {
     }
 
     @Post("/unlock")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async unlock(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -35,7 +35,7 @@ export class AdminController {
     }
 
     @Post("/transfer")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async transfer(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -50,7 +50,7 @@ export class AdminController {
     }
 
     @Post("/update")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async update(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -63,7 +63,7 @@ export class AdminController {
     }
 
     @Post("/burn")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async consume(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -75,7 +75,7 @@ export class AdminController {
     }
 
     @Post("/issue")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async issue(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
@@ -89,7 +89,7 @@ export class AdminController {
     }
 
     @Post("/transaction")
-    @Authorized("GAME_SERVER")
+    @Authorized(["SERVICE", "GM"])
     public async transaction(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
