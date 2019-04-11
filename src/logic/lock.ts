@@ -1,16 +1,13 @@
 import {Service} from "typedi";
-import {NftEntity} from "./entities";
-import {NftBurnEntity} from "./entities/nft_burn.entity";
 import {redisLock, redisUnlock} from "./service/redis";
-import {NftService} from "./nft";
-import {LockEntity, LockStatus} from "./entities/lock";
 import {Error} from "tslint/lib/error";
+import {LockEntity, LockStatus} from "./entities";
 
 @Service()
 export class LockService {
     static inst: LockService;
 
-    constructor(public readonly nftService: NftService) {
+    constructor() {
         LockService.inst = this;
         console.log("Service: instance created ", LockService.inst);
     }

@@ -2,9 +2,16 @@ import {
     BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn, UpdateDateColumn,
 } from "typeorm";
 
+export enum Operation {
+    ISSUE,
+    BURN,
+    TRANSFER,
+    UPDATE
+}
 
-@Entity("update_record")
-export class updateRecordEntity extends BaseEntity { // todo
+
+@Entity("ops")
+export class operationEntity extends BaseEntity { // todo
 
     @ObjectIdColumn()
     public id: ObjectID;
@@ -13,7 +20,7 @@ export class updateRecordEntity extends BaseEntity { // todo
     public nft_id: ObjectID;
 
     @Column()
-    public operation: string;
+    public op: string;
 
     @CreateDateColumn()
     public created_at: Date;

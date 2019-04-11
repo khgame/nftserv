@@ -1,4 +1,3 @@
-import {IsDefined} from "class-validator";
 import {
     BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn, UpdateDateColumn,
 } from "typeorm";
@@ -21,6 +20,9 @@ export class LockEntity extends BaseEntity {
 
     @ObjectIdColumn()
     public id: ObjectID;
+
+    @Column()
+    public idempotent_hash: string;
 
     @Column()
     public nft_id: ObjectID;

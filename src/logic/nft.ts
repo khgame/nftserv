@@ -1,6 +1,5 @@
 import {Service} from "typedi";
-import {NftEntity} from "./entities";
-import {NftBurnEntity} from "./entities/nft_burn.entity";
+import {NftBurnEntity, NftEntity} from "./entities";
 import {redisLock, redisUnlock} from "./service/redis";
 
 @Service()
