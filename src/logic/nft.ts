@@ -1,8 +1,6 @@
 import {Service} from "typedi";
-import {NftData} from "./entities";
-import {NftBurn} from "./entities/nft_burn.entity";
-import {Global} from "../global";
-import {redisLock, redisUnlock} from "./service/redis";
+import {NftEntity} from "./entities";
+import {LockEntity} from "./entities/lock";
 
 @Service()
 export class NftService {
@@ -14,15 +12,19 @@ export class NftService {
     }
 
     async list(uid: string) {
-        const nftds = await NftData.find({uid});
+        const nftds = await NftEntity.find({uid});
         return nftds;
+    }
+
+    async getLock(nftId: string){
+        return await LockEntity.findOne(nftId);
     }
 
     async get(nftId: string) {
         if (!nftId) {
             throw new Error('get info error: nftId connot be empty');
         }
-        const nftd = await NftData.findOne(nftId);
+        const nftd = await NftEntity.findOne(nftId); // todo: timeout logic
         if (!nftd) {
             throw new Error(`get info error: nft<${nftId}> dose not exist`);
         }

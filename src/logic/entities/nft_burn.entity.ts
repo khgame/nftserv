@@ -2,10 +2,10 @@ import {IsDefined} from "class-validator";
 import {
     BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn,
 } from "typeorm";
-import {NftData} from "./nft.entity";
+import {NftEntity} from "./nft.entity";
 
 @Entity("nft_burn")
-export class NftBurn extends BaseEntity {
+export class NftBurnEntity extends BaseEntity {
 
     @ObjectIdColumn()
     public id: ObjectID;
@@ -17,7 +17,7 @@ export class NftBurn extends BaseEntity {
     @IsDefined()
     public data: any;
 
-    @CreateDateColumn()
+    @Column()
     public created_at: Date;
 
     @CreateDateColumn()
@@ -32,7 +32,7 @@ export class NftBurn extends BaseEntity {
     @Column()
     public lock_by: string = "";
 
-    constructor(nftData: NftData) {
+    constructor(nftData: NftEntity) {
         super();
         this.id = nftData.id;
         this.uid = nftData.uid;

@@ -1,9 +1,9 @@
 import {Service} from "typedi";
-import {NftData} from "./entities";
-import {NftBurn} from "./entities/nft_burn.entity";
-import {Global} from "../global";
+import {NftEntity} from "./entities";
+import {NftBurnEntity} from "./entities/nft_burn.entity";
 import {redisLock, redisUnlock} from "./service/redis";
 import {NftService} from "./nft";
+import {LockEntity, LockStatus} from "./entities/lock";
 
 @Service()
 export class AdminService {
@@ -15,7 +15,7 @@ export class AdminService {
     }
 
     async produce(uid: string, data: any) {
-        const nftd = new NftData(uid, data);
+        const nftd = new NftEntity(uid, data);
         return await nftd.save();
     }
 
@@ -27,7 +27,7 @@ export class AdminService {
 
         const nftd = await this.nftService.get(nftId);
         if (nftd) {
-            const burn = new NftBurn(nftd);
+            const burn = new NftBurnEntity(nftd);
             const ret = await Promise.all([
                 burn.save(),
                 nftd.remove()
@@ -39,32 +39,46 @@ export class AdminService {
         return undefined;
     }
 
-    async lock(serverId: any, nftId: string) {
+    async lock(nftId: string, idempotentHash: string, serverId: string) {
         const lockResult = await redisLock(nftId, "");
         if (!lockResult) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
-        const info = await this.nftService.get(nftId);
-
-        if (info.shelf_channel) {
-            await redisUnlock(nftId, "");
-            throw new Error(`lock error : nft<${nftId}> are on shelf in channel ${info.shelf_channel}`);
+        let lock = await this.nftService.getLock(nftId);
+        if (lock) {
+            throw new Error(`lock error : nft<${nftId}> are already locked by server ${lock.locker}`);
         }
 
-        if (info.lock_by) {
-            await redisUnlock(nftId, "");
-            throw new Error(`lock error : nft<${nftId}> are already locked by server ${info.lock_by}`);
-        }
-
-        info.lock_by = serverId;
-        const ret = await info.save();
-
+        lock = new LockEntity(nftId, idempotentHash, serverId);
+        const ret = lock.save();
         await redisUnlock(nftId, "");
         return ret;
     }
 
-    async unlock(serverId: string, nftId: string) {
+    async ensureLock(serverId: any, nftId: string) {
+        const lockResult = await redisLock(nftId, "");
+        if (!lockResult) {
+            throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
+        }
+        let lock = await this.nftService.getLock(nftId);
+        if (!lock) {
+            await redisUnlock(nftId, "");
+            throw new Error(`ensure lock error : lock of nft<${nftId}> are not exist`);
+        }
+
+        if (lock.state !== LockStatus.PRE_COMMITTED) {
+            await redisUnlock(nftId, "");
+            throw new Error(`ensure lock error : lock state of nft<${nftId}> error, expect PRE_COMMITTED(${LockStatus.PRE_COMMITTED}), got lock.state`);
+        }
+
+        lock.state = LockStatus.COMMITTED;
+        let ret = await lock.save();
+        await redisUnlock(nftId, "");
+        return ret;
+    }
+
+    async unlock(nftId: string, serverId: string) {
         const lockResult = await redisLock(nftId, "");
         if (!lockResult) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);

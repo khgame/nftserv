@@ -4,7 +4,7 @@ import {
 } from "typeorm";
 
 @Entity("nft")
-export class NftData extends BaseEntity {
+export class NftEntity extends BaseEntity {
 
     @ObjectIdColumn()
     public id: ObjectID;
@@ -17,7 +17,7 @@ export class NftData extends BaseEntity {
     public data: any;
 
     @CreateDateColumn()
-    public created_at: Date  = new Date();
+    public created_at: Date;
 
     @Column()
     public shelf_channel: string = "";

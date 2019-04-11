@@ -16,9 +16,10 @@ export class AdminController {
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
             nft_id: string
+            idempotent_hash: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.adminService.lock(sid, body.nft_id);
+        return await this.adminService.lock(body.nft_id, body.idempotent_hash, sid);
     }
 
     @Post("/unlock")
@@ -30,7 +31,7 @@ export class AdminController {
             nft_id: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.adminService.unlock(sid, body.nft_id);
+        return await this.adminService.unlock(body.nft_id, sid);
     }
 
     @Post("/transfer")
