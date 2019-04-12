@@ -1,8 +1,7 @@
 import {Service} from "typedi";
 import {redisLock, redisUnlock} from "./service/redis";
-import {Error} from "tslint/lib/error";
-import {LockEntity, LockStatus} from "./entities";
 import {ObjectID} from "mongodb";
+import {ILock, LockModel, LockStatus, LockTerminatedModel} from "./model";
 
 @Service()
 export class LockService {
@@ -13,10 +12,24 @@ export class LockService {
         console.log("Service: instance created ", LockService.inst);
     }
 
+    private async saveState(lock: ILock, state: LockStatus){
+        if (state < LockStatus.FINISHED_STATES && state - lock.state !== 1) {
+            throw new Error(`lockEntity setState error: cannot set state from ${lock.state} to state`);
+        }
+        lock.state = state;
+        if (lock.state < LockStatus.FINISHED_STATES) {
+            return await lock.save();
+        } else {
+            const lockT = await LockTerminatedModel.create(lock);
+            await LockModel.deleteOne({_id: lock._id});
+            return lockT;
+        }
+    }
+
     async get(nftId: string) {
-        const lock = await LockEntity.findOne({nft_id: ObjectID.createFromHexString(nftId)});
+        const lock = await LockModel.findOne({nft_id: ObjectID.createFromHexString(nftId)});
         if (lock && lock.state === LockStatus.PREPARED && Date.now() - lock.update_at.getTime() > 5 * 60 * 1000) { // time out in 5 minutes
-            await lock.saveState(LockStatus.TIMEOUT);
+            await this.saveState(lock, LockStatus.TIMEOUT);
             // set to time out and move it to trash is the only rollback operation
             return;
         }
@@ -24,7 +37,7 @@ export class LockService {
     }
 
     async check(lockId: string) {
-        return await LockEntity.findOne(lockId); // to doCommit, the RM should check that the lock's stated is COMMITTED
+        return await LockModel.findOne({_id: lockId}); // to doCommit, the RM should check that the lock's stated is COMMITTED
     }
 
     private async getPreparedLock(lockId: string, serverId: string) {
@@ -55,8 +68,8 @@ export class LockService {
         }
 
         // lock and set prepared
-        lock = new LockEntity(ObjectID.createFromHexString(nftId), serverId);
-        const ret = await lock.saveState(LockStatus.PREPARED);
+        lock = await LockModel.create({ nft_id: ObjectID.createFromHexString(nftId), locker: serverId });
+        const ret = await this.saveState(lock, LockStatus.PREPARED);
 
         // remove mutex
         await redisUnlock(nftId, "LockService:vote");
@@ -65,12 +78,12 @@ export class LockService {
 
     async continue(lockId: string, serverId: string) { // logic are prepared
         const lock = await this.getPreparedLock(lockId, serverId);
-        return await lock.saveState(LockStatus.COMMITTED); // to doCommit, the RM should check that the lock's stated is COMMITTED
+        return await this.saveState(lock, LockStatus.COMMITTED); // to doCommit, the RM should check that the lock's stated is COMMITTED
     }
 
     async abort(lockId: string, serverId: string) {
         const lock = await this.getPreparedLock(lockId, serverId);
-        return await lock.saveState(LockStatus.ABORTED);
+        return await this.saveState(lock, LockStatus.ABORTED);
     }
 
     async release(nftId: string, serverId: string) {
@@ -88,7 +101,7 @@ export class LockService {
             throw new Error(`unlock error : nft<${nftId}> are not locked by another service, expect ${serverId}, got ${lock.locker}`);
         }
 
-        return await lock.saveState(LockStatus.RELEASED);
+        return await this.saveState(lock, LockStatus.RELEASED);
     }
 
 }

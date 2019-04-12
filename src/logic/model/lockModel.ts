@@ -15,7 +15,7 @@ export enum LockStatus {
     RELEASED = 21
 }
 
-export interface ILockModel extends Document {
+export interface ILock extends Document {
 
     /**
      * nft id
@@ -53,7 +53,7 @@ const LockSchema = new Schema({
 });
 
 LockSchema.pre("save", function (next) {
-    const doc = this as ILockModel;
+    const doc = this as ILock;
     if (doc.isNew) {
         doc.created_at = doc.created_at || new Date();
     }
@@ -61,8 +61,8 @@ LockSchema.pre("save", function (next) {
     next();
 });
 
-export const LockModel = mongoose.model<ILockModel>(
+export const LockModel = mongoose.model<ILock>(
     "lock", LockSchema);
-export const LockTerminatedModel = mongoose.model<ILockModel>(
+export const LockTerminatedModel = mongoose.model<ILock>(
     "lock_terminated", LockSchema);
 

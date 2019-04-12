@@ -1,14 +1,14 @@
 import {Service} from "typedi";
-import {OperationCode, OperationEntity} from "./entities";
 import {ObjectID} from 'mongodb';
+import {OpCode, OpModel} from "./model";
 
 @Service()
-export class OperationService {
-    static inst: OperationService;
+export class OpService {
+    static inst: OpService;
 
     constructor() {
-        OperationService.inst = this;
-        console.log("Service: instance created ", OperationService.inst);
+        OpService.inst = this;
+        console.log("Service: instance created ", OpService.inst);
     }
 
     async get(opId: string) {
@@ -16,30 +16,20 @@ export class OperationService {
         if (!opId || opId.length !== 24) {
             throw new Error(`get op error: opId<${opId}> must be a single String of 24 hex character`);
         }
-        return await OperationEntity.findOne({op_id: opId});
+        return await OpModel.findOne({_id: opId});
     }
 
-    async create(opId: string, nftId: ObjectID, opCode: OperationCode, params: any) { // todo: sharding
-        console.log("create", opId);
-
+    async create(opId: string, nftId: ObjectID, opCode: OpCode, params: any) { // todo: sharding
+        console.log("op create:", opId);
         if (!opId || opId.length !== 24) {
             throw new Error('create op error: opId must be a single String of 24 hex character');
         }
-
-        // let real_op_id = ObjectID.createFromHexString(opId);
-        // console.log("= opId", opId, real_op_id);
-
-        let op = new OperationEntity();
-
-        op.op_id = opId; // real_op_id.toHexString();
-        op.nft_id = nftId;
-        op.op_code = opCode;
-        op.params = params;
-
-        // console.log("= op", op);
-        op = await op.save();
-        // console.log("= saved");
-        return op;
+        return await OpModel.create({
+            _id: opId,
+            nft_id: nftId,
+            op_code: opCode,
+            params
+        });
     }
 
 }

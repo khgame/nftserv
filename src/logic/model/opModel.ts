@@ -10,7 +10,7 @@ export enum OpCode {
     UPDATE
 }
 
-export interface IOpModel extends Document {
+export interface IOp extends Document {
 
     /**
      * the op_id, should be a single String of 24 hex character
@@ -49,7 +49,7 @@ const OpSchema = new Schema({
 });
 
 OpSchema.pre("save", function (next) {
-    const doc = this as IOpModel;
+    const doc = this as IOp;
     if (doc.isNew) {
         doc.created_at = doc.created_at || new Date();
     }
@@ -57,9 +57,9 @@ OpSchema.pre("save", function (next) {
     next();
 });
 
-export const OpModel = mongoose.model<IOpModel>(
+export const OpModel = mongoose.model<IOp>(
     "op", OpSchema);
-export const OpTerminatedModel = mongoose.model<IOpModel>(
+export const OpTerminatedModel = mongoose.model<IOp>(
     "op_terminated", OpSchema);
 
 

@@ -4,9 +4,9 @@ import * as Path from "path";
 import {Global} from "../src/global";
 
 import {createReq} from './createReq';
-import {initServices} from "../src/logic/service";
+import {initServices} from "service";
 import {ObjectId} from "bson";
-import {OperationCode} from "../src/logic/entities";
+import {OperationCode} from "../bench/entities";
 
 
 const uid = `${Math.random()}`;
