@@ -48,9 +48,9 @@ export class LockEntity extends BaseEntity {
     @UpdateDateColumn()
     public update_at: Date;
 
-    constructor(nft_id: string, locker: string) {
+    constructor(nft_id: ObjectID, locker: string) {
         super();
-        this.nft_id = new ObjectID(nft_id);
+        this.nft_id = nft_id;
         this.locker = locker;
     }
 

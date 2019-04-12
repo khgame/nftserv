@@ -16,6 +16,7 @@ export class NftService {
     }
 
     async list(uid: string, logic_mark: string = "") {
+        // console.log("list : uid", uid, "logic_mark", logic_mark);
         const nftds = logic_mark ?
             await NftEntity.find({logic_mark, uid}) :
             await NftEntity.find({uid});
@@ -42,15 +43,20 @@ export class NftService {
      * @return {Promise<BaseEntity>}
      */
     async issue(opId: string, uid: string, data: any, logic_mark: string = "") {
+
         let op = await this.opService.get(opId);
+        console.log("got", op)
         if (op) {
             return {new: false, op, time_offset_ms : Date.now() - op.created_at.getTime()};
         }
 
+        console.log("issue ==== ", opId, uid);
         let nftd = new NftEntity(data, logic_mark);
         nftd = await nftd.save();
         op = await this.opService.create(opId, nftd.id, OperationCode.ISSUE, {data, logic_mark});
-
+        nftd.uid = uid;
+        nftd = await nftd.save();
+        console.log("op ==== ", op);
         return {new: true, op};
     }
 

@@ -11,7 +11,7 @@ export class NftController {
 
     @Get("/list/:uid")
     public async list(@Param("uid") uid: string) {
-        // console.log("uid call list", uid);
+        // console.log("NftController : uid call list", uid);
         return await this.nftService.list(uid);
     }
 
@@ -27,10 +27,11 @@ export class NftController {
         @Body() body: {
             op_id: string
             uid: string
-            data: string
+            data: any
             logic_mark: string
         }) {
         ctx.assert.ok(body.uid, "invalid user");
+        console.log("issue body", body);
         return await this.nftService.issue(body.op_id, body.uid, body.data, body.logic_mark);
     }
 
@@ -55,7 +56,7 @@ export class NftController {
         @Body() body: {
             op_id: string
             nft_id: string,
-            data: string
+            data: any
         }) {
         ctx.assert.ok(sid, "invalid server id");
         return await this.nftService.update(sid, body.op_id, body.nft_id, body.data);

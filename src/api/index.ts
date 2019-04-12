@@ -8,8 +8,7 @@ import * as controllers from "./controllers/index";
 
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
-import {getRedisKey, redis} from "../logic/service/redis";
-import {getGameServers, getOnlineState} from "../logic/service/login";
+import {getGameServers, getOnlineState} from "../logic/service";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
@@ -21,6 +20,7 @@ export class ApiApplication {
     constructor() {
         this.api = new Koa();
         this.server = createServer(this.api.callback());
+        this.init();
     }
 
     private init() {
@@ -47,22 +47,24 @@ export class ApiApplication {
             controllers: objectToArray(controllers),
             classTransformer: false,
             currentUserChecker: async (action: Action) => {
+                console.log("request", action.request);
                 const server_id = action.request.headers.server_id;
                 const session_id = action.request.headers.session_id;
-                // console.log("session_id", session_id);
                 const result: any = {sid: server_id};
                 if (session_id) {
                     const onlineState = await getOnlineState(session_id);
                     if (onlineState.status === 200) {
-                        console.log("onlineState", onlineState);
+                        // console.log("onlineState", onlineState);
                         result.uid = onlineState.result.uid;
                     }
                 }
                 return result;
             },
             authorizationChecker: async (action: Action, roles: string[]) => {
+                // console.log("authorizationChecker", action.request);
+
                 const server_id = action.request.headers.server_id;
-                // console.log("serverId", action.request.headers, server_id);
+
                 if (!server_id) {
                     return false;
                 }
@@ -75,7 +77,7 @@ export class ApiApplication {
                 const gameServers: Array<{ identity: string }> = rsp.result;
                 const server = gameServers.find(v => v.identity === server_id); // this serve is exist in the game server list
 
-                // console.log("gameServers", gameServers);
+                // console.log("gameServers", gameServers, server);
                 // todo: don't use static id
 
                 return !!server; // todo: server authority
@@ -86,7 +88,6 @@ export class ApiApplication {
     }
 
     public start(port: number): Server {
-        this.init();
         return this.api.listen(port, (): void => {
             console.log(`Koa server has started, running at: http://127.0.0.1:${port}. `);
         });

@@ -55,7 +55,7 @@ export class LockService {
         }
 
         // lock and set prepared
-        lock = new LockEntity(nftId, serverId);
+        lock = new LockEntity(ObjectID.createFromHexString(nftId), serverId);
         const ret = await lock.saveState(LockStatus.PREPARED);
 
         // remove mutex

@@ -2,8 +2,7 @@ import {
     BaseEntity,
     Column,
     CreateDateColumn,
-    Entity, Index,
-    PrimaryColumn
+    Entity, Index, ObjectIdColumn, PrimaryColumn, Unique,
 } from "typeorm";
 import {ObjectID} from 'mongodb';
 
@@ -19,8 +18,12 @@ export enum OperationCode {
 @Entity("ops")
 export class OperationEntity extends BaseEntity { // todo
 
-    @PrimaryColumn()
-    public id: ObjectID;
+    @ObjectIdColumn()
+    public id: string;
+
+    @Index()
+    @Column('string')
+    public op_id: string = "";
 
     @Index()
     @Column()
@@ -32,19 +35,11 @@ export class OperationEntity extends BaseEntity { // todo
         enum: OperationCode,
         default: OperationCode.NONE
     })
-    public opCode: OperationCode;
+    public op_code: OperationCode;
 
     @Column()
     public params: any;
 
     @CreateDateColumn()
     public created_at: Date;
-
-    constructor(opId: string, nftId: ObjectID, opCode: OperationCode, params: any) {
-        super();
-        this.id = new ObjectID(opId);
-        this.nft_id = nftId;
-        this.opCode = opCode;
-        this.params = params;
-    }
 }

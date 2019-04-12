@@ -12,15 +12,33 @@ export class OperationService {
     }
 
     async get(opId: string) {
-        if (!opId) {
-            throw new Error('get operation error: opId cannot be empty');
+        console.log("get op", opId);
+        if (!opId || opId.length !== 24) {
+            throw new Error(`get op error: opId<${opId}> must be a single String of 24 hex character`);
         }
-        return await OperationEntity.findOne(opId);
+        return await OperationEntity.findOne({op_id: opId});
     }
 
-    async create(opId: string, nftId: ObjectID, opCode: OperationCode, params: any){ // todo: sharding
-        let op = new OperationEntity(opId, nftId, opCode, params);
+    async create(opId: string, nftId: ObjectID, opCode: OperationCode, params: any) { // todo: sharding
+        console.log("create", opId);
+
+        if (!opId || opId.length !== 24) {
+            throw new Error('create op error: opId must be a single String of 24 hex character');
+        }
+
+        // let real_op_id = ObjectID.createFromHexString(opId);
+        // console.log("= opId", opId, real_op_id);
+
+        let op = new OperationEntity();
+
+        op.op_id = opId; // real_op_id.toHexString();
+        op.nft_id = nftId;
+        op.op_code = opCode;
+        op.params = params;
+
+        // console.log("= op", op);
         op = await op.save();
+        // console.log("= saved");
         return op;
     }
 
