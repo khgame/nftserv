@@ -10,9 +10,8 @@ export class NftController {
     }
 
     @Get("/list/:owner_id")
-    public async list(@Param("uid") uid: string) {
-        // console.log("NftController : owner_id call list", owner_id);
-        return await this.nftService.list(uid);
+    public async list(@Param("owner_id") ownerId: string) {
+        return await this.nftService.list(ownerId);
     }
 
     @Get("/get/:nft_id")
@@ -26,13 +25,13 @@ export class NftController {
         @Ctx() ctx: Context,
         @Body() body: {
             op_id: string
-            uid: string
+            owner_id: string
             data: any
             logic_mark: string
         }) {
-        ctx.assert.ok(body.uid, "invalid user");
+        ctx.assert.ok(body.owner_id, "invalid user");
         console.log("issue body", body);
-        return await this.nftService.issue(body.op_id, body.uid, body.data, body.logic_mark);
+        return await this.nftService.issue(body.op_id, body.owner_id, body.data, body.logic_mark);
     }
 
     @Post("/burn")
