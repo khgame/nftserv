@@ -16,7 +16,7 @@ const objectToArray = (dict: any): any[] =>
 
 export class ApiApplication {
     private api: Koa;
-    private server: Server;
+    public server: Server;
 
     constructor() {
         this.api = new Koa();

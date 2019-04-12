@@ -5,10 +5,9 @@ import {
     Entity,
     Index,
     ObjectIdColumn,
-    PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import {OperationCode} from "./operation.entity";
+
 import {ObjectID} from 'mongodb';
 export enum LockStatus {
     INITIALED = 0,
@@ -63,7 +62,7 @@ export class LockEntity extends BaseEntity {
         if (this.state < LockStatus.FINISHED_STATES) {
             return await this.save();
         } else {
-            const lockFinished = new LockFinishedEntity(this);
+            const lockFinished = LockFinishedEntity.createFinishedLock(this);
             const ret = await lockFinished.save();
             await this.remove();
             return ret;
@@ -82,10 +81,10 @@ export class LockFinishedEntity extends BaseEntity {
     public nft_id: string;
 
     @Column()
-    public state: LockStatus = LockStatus.FINISHED_STATES;
+    public locker: string = "";
 
     @Column()
-    public locker: string = "";
+    public state: LockStatus = LockStatus.FINISHED_STATES;
 
     @Column()
     public created_at: Date;
@@ -93,11 +92,16 @@ export class LockFinishedEntity extends BaseEntity {
     @CreateDateColumn()
     public finished_at: Date;
 
-    constructor(lock: LockEntity) {
+    constructor() {
         super();
-        this.id = lock.id;
-        this.locker = lock.locker;
-        this.state = lock.state;
-        this.created_at = lock.created_at;
+    }
+
+    static createFinishedLock(lock: LockEntity){
+        const ret = new LockFinishedEntity();
+        ret.id = lock.id;
+        ret.locker = lock.locker;
+        ret.state = lock.state;
+        ret.created_at = lock.created_at;
+        return ret;
     }
 }

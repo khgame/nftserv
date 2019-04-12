@@ -47,7 +47,7 @@ export class NftEntity extends BaseEntity {
     }
 
     async burn() {
-        const burn = new NftBurnEntity(this);
+        const burn = NftBurnEntity.createNftBurnEntity(this);
         await this.remove();
         return burn.save();
     }
@@ -83,12 +83,17 @@ export class NftBurnEntity extends BaseEntity {
     @Column()
     public shelf_price: number = 0;
 
-    constructor(nftData: NftEntity) {
+    constructor() {
         super();
-        this.id = nftData.id;
-        this.uid = nftData.uid;
-        this.data = nftData.data;
-        this.created_at = nftData.created_at;
-        this.logic_mark = nftData.logic_mark;
+    }
+
+    static createNftBurnEntity(nftData: NftEntity){
+        let ret = new NftBurnEntity();
+        ret.id = nftData.id;
+        ret.uid = nftData.uid;
+        ret.data = nftData.data;
+        ret.created_at = nftData.created_at;
+        ret.logic_mark = nftData.logic_mark;
+        return ret;
     }
 }

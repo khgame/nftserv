@@ -11,6 +11,6 @@ export const initDB = async () => {
         entities: Object.keys(entities).map((name) => (entities as any)[name]),
     };
     return createConnection(options)
-        .then(() => console.log("mongodb connect success with options", options))
+        .then(() => console.log("mongodb connect success with options", {host, port, database, username, password}))
         .catch((error: any) => console.log(error));
 };

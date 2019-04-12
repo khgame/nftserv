@@ -16,7 +16,7 @@ export class NftController {
     }
 
     @Get("/get/:nft_id")
-    public async info(@Param("nft_id") nftId: string) {
+    public async get(@Param("nft_id") nftId: string) {
         return await this.nftService.get(nftId);
     }
 
