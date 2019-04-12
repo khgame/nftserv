@@ -12,16 +12,25 @@ export class LockService {
         console.log("Service: instance created ", LockService.inst);
     }
 
-    private async saveState(lock: ILock, state: LockStatus){
+    private async saveState(lock: ILock, state: LockStatus) {
         if (state < LockStatus.FINISHED_STATES && state - lock.state !== 1) {
             throw new Error(`lockEntity setState error: cannot set state from ${lock.state} to state`);
         }
         lock.state = state;
         if (lock.state < LockStatus.FINISHED_STATES) {
-            return await lock.save();
+            const ret = await LockTerminatedModel.updateOne({_id: lock._id}, {state});
+            if (!ret) {
+                throw new Error(`saveState error : lock<${lock._id}> status update failed`);
+            }
         } else {
             const lockT = await LockTerminatedModel.create(lock);
-            await LockModel.deleteOne({_id: lock._id});
+            if (!lockT) {
+                throw new Error(`saveState error : terminated lock<${lock._id}> create failed`);
+            }
+            const ret = await LockModel.deleteOne({_id: lock._id});
+            if (!ret) {
+                throw new Error(`saveState error : delete lock<${lock._id}> failed`);
+            }
             return lockT;
         }
     }
@@ -49,7 +58,7 @@ export class LockService {
             throw new Error(`getPreparedLock error : lock<lockId> error, expect PREPARED(${LockStatus.PREPARED}), got ${lock.state}`);
         }
         if (lock.locker !== serverId) { // check if the nft are locked by the given service
-            throw new Error(`unlock error : lock<${lockId}>.locker error, expect ${serverId}, got ${lock.locker}`);
+            throw new Error(`getPreparedLock error : lock<${lockId}>.locker error, expect ${serverId}, got ${lock.locker}`);
         }
         return lock;
     }
@@ -68,7 +77,7 @@ export class LockService {
         }
 
         // lock and set prepared
-        lock = await LockModel.create({ nft_id: ObjectID.createFromHexString(nftId), locker: serverId });
+        lock = await LockModel.create({nft_id: ObjectID.createFromHexString(nftId), locker: serverId});
         const ret = await this.saveState(lock, LockStatus.PREPARED);
 
         // remove mutex

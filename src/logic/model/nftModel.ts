@@ -7,9 +7,9 @@ import {Document, Schema} from "mongoose";
 export interface INft extends Document {
 
     /**
-     * owner id
+     * owner_id id
      */
-    uid: string;
+    owner_id: string;
 
     /**
      * logic mark for indexing
@@ -34,11 +34,11 @@ export interface INft extends Document {
 }
 
 const NftSchema = new Schema({
-    uid: {type: String, required: true, default: ""}, // 订单id
-    logic_mark: {type: String, required: true, default: ""}, // 买家id
-    data: {type: String, required: true, default: {}}, // 资源id
-    created_at: {type: Date}, // 买单生成时间
-    update_at: {type: Date}, // 买单生成时间
+    owner_id: {type: String},
+    logic_mark: {type: String, required: true},
+    data: {type: Object, required: true},
+    created_at: {type: Date},
+    update_at: {type: Date},
 });
 
 NftSchema.pre("save", function(next) {

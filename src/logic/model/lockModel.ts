@@ -28,7 +28,7 @@ export interface ILock extends Document {
     state: LockStatus;
 
     /**
-     * uid of the locker
+     * owner_id of the locker
      */
     locker: string;
 

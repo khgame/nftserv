@@ -23,9 +23,9 @@ export class TradeService {
     //     const info = await this.nftService.get(nftId);
     //     console.log('shelf', nftId, info);
     //
-    //     if (info.uid !== userId) {
+    //     if (info.owner_id !== userId) {
     //         await redisUnlock(nftId, "");
-    //         throw new Error(`shelf error : nft<${nftId}> owner error, expected ${info.uid}, got ${userId}`);
+    //         throw new Error(`shelf error : nft<${nftId}> owner_id error, expected ${info.owner_id}, got ${userId}`);
     //     }
     //
     //     // if (info.lock_by) {
@@ -74,9 +74,9 @@ export class TradeService {
     //
     //     const info = await this.nftService.get(nftId);
     //
-    //     if (info.uid !== userId) {
+    //     if (info.owner_id !== userId) {
     //         await redisUnlock(nftId, "");
-    //         throw new Error(`unshelf error : nft<${nftId}> owner error, expected ${info.uid}, got ${userId}`);
+    //         throw new Error(`unshelf error : nft<${nftId}> owner_id error, expected ${info.owner_id}, got ${userId}`);
     //     }
     //
     //     if (!info.shelf_channel) {
