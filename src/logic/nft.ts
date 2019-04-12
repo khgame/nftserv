@@ -49,11 +49,9 @@ export class NftService {
 
         let nftd = new NftEntity(data, logic_mark);
         nftd = await nftd.save();
+        op = await this.opService.create(opId, nftd.id, OperationCode.ISSUE, {data, logic_mark});
 
-        return {
-            new: true,
-            op: await this.opService.create(opId, nftd.id, OperationCode.ISSUE, {data, logic_mark})
-        };
+        return {new: true, op};
     }
 
     async burn(serverId: string, opId: string, nftId: string) {
@@ -62,22 +60,34 @@ export class NftService {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
+        let op = await this.opService.get(opId);
+        if (op) {
+            return {new: false, op};
+        }
+
         const lock = await this.lockService.get(nftId);
         if (lock && lock.locker !== serverId) {
             await redisUnlock(nftId, "NftService:update");
             throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
         }
-
         const nftd = await this.get(nftId);
-        let ret = await nftd.burn();
+        const burn = await nftd.burn();
+
+        op = await this.opService.create(opId, nftd.id, OperationCode.BURN, {burn});
+
         await redisUnlock(nftId, "");
-        return ret;
+        return {new: true, op};
     }
 
     async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
         const mutex = await redisLock(nftId, "NftService:transfer");
         if (!mutex) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
+        }
+
+        let op = await this.opService.get(opId);
+        if (op) {
+            return {new: false, op};
         }
 
         if (from === to) {
@@ -91,22 +101,18 @@ export class NftService {
             throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
         }
 
-        const info = await this.get(nftId);
-        if (info.uid !== from) {
+        const nftd = await this.get(nftId);
+        if (nftd.uid !== from) {
             await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${info.uid}`);
+            throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${nftd.uid}`);
         }
 
-        await this.opService.create(opId,
-            new ObjectID(nftId),
-            OperationCode.TRANSFER,
-            {from, to, memo}
-        );
+        op = await this.opService.create(opId, nftd.id, OperationCode.TRANSFER, {from, to, memo});
+        nftd.uid = to;
+        await nftd.save();
 
-        info.uid = to;
-        const ret = await info.save();
         await redisUnlock(nftId, "NftService:transfer");
-        return ret;
+        return {new: true, op};
     }
 
     async update(serverId: string, opId: string, nftId: string, data: any) {
@@ -115,6 +121,10 @@ export class NftService {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
+        let op = await this.opService.get(opId);
+        if (op) {
+            return {new: false, op};
+        }
 
         const lock = await this.lockService.get(nftId);
         if (lock && lock.locker !== serverId) {
@@ -122,11 +132,13 @@ export class NftService {
             throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
         }
 
-        const info = await this.get(nftId);
-        info.data = data;
-        // todo: record
-        const ret = await info.save();
+        const nftd = await this.get(nftId);
+        nftd.data = data;
+
+        op = await this.opService.create(opId, nftd.id, OperationCode.UPDATE, {data});
+        await nftd.save();
+
         await redisUnlock(nftId, "");
-        return ret;
+        return {new: true, op};
     }
 }
