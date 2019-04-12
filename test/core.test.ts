@@ -1,12 +1,14 @@
-
 import {assert} from "chai";
 import * as Path from "path";
 import {Global} from "../src/global";
+
+import {spawn, exec, ChildProcessWithoutNullStreams, ChildProcess} from 'child_process'
 
 import {createReq} from './createReq';
 import {initServices} from "../src/logic/service";
 import {ObjectId} from "bson";
 import {OpCode} from "../src/logic/model";
+import {forMs} from "kht";
 
 
 const owner_id = `${Math.random()}`;
@@ -14,7 +16,22 @@ describe(`validate owner_id ${owner_id}`, async function () {
     process.env.NODE_ENV = "production";
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     // await ();
-    before(initServices);
+    let loginSvr : ChildProcess;
+    before(async () => {
+        await initServices();
+    });
+
+    beforeEach(async () => {
+        loginSvr = exec("npx kh-loginsvr start -m");
+        console.log("=> start login server mock");
+        await forMs(1000);
+        console.log("=> start test");
+    })
+
+    afterEach(async () => {
+        await loginSvr.kill();
+        console.log("=> end login server mock");
+    })
 
     it('init empty', function (done) {
         createReq().get(`/v1/nft/list/${owner_id}`)

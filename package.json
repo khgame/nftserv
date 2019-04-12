@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.test.ts",
-    "build": "tsc",
+    "build": "npx tsc && cp ./src/conf.default.json dist",
     "app": "npx ts-node ./src/app",
     "lint": "npx tslint --fix --project .",
     "watch": "cross-env nodemon --inspect --watch 'src/**/*' -e ts,tsx --exec 'node -r ts-node/register' ./src/app start"
@@ -34,6 +34,7 @@
     "fs-extra": "^7.0.1",
     "ioredis": "^4.9.0",
     "kcors": "^2.2.2",
+    "kht": "^0.0.8",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-logger": "^3.2.0",
@@ -47,6 +48,7 @@
     "winston-daily-rotate-file": "^3.8.0"
   },
   "devDependencies": {
+    "@khgame/loginsvr": "^0.1.0",
     "@types/chai": "^4.1.7",
     "@types/kcors": "^2.2.3",
     "@types/koa": "^2.0.48",
