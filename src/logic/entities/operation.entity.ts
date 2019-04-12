@@ -1,5 +1,10 @@
 import {
-    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn, UpdateDateColumn,
+    BaseEntity,
+    Column,
+    CreateDateColumn,
+    Entity,
+    ObjectID,
+    PrimaryColumn
 } from "typeorm";
 
 export enum Operation {
@@ -13,7 +18,7 @@ export enum Operation {
 @Entity("ops")
 export class OperationEntity extends BaseEntity { // todo
 
-    @ObjectIdColumn()
+    @PrimaryColumn()
     public id: ObjectID;
 
     @Column()
@@ -28,9 +33,10 @@ export class OperationEntity extends BaseEntity { // todo
     @CreateDateColumn()
     public created_at: Date;
 
-    constructor(nft_id: string, op: Operation, params: any) {
+    constructor(opId: string, nftId: ObjectID, op: Operation, params: any) {
         super();
-        this.nft_id = new ObjectID(nft_id);
+        this.id = new ObjectID(opId);
+        this.nft_id = nftId;
         this.op = op;
         this.params = params;
     }

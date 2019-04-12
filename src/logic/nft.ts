@@ -32,29 +32,32 @@ export class NftService {
 
     /**
      * issue an nft to a user
-     * @param {string} nftId - should be 24 characters random hash
+     * @param {string} operationId - should be 24 characters random hash
      * @param {string} uid - user identity from the login server cluster
      * @param data - any data
      * @param {string} logic_mark - can be genre or something else, for indexing
      * @return {Promise<BaseEntity>}
      */
-    async issue(nftId: string, uid: string, data: any, logic_mark: string = "") {
-        let op = await OperationEntity.findOne({op: Operation.ISSUE, nft_id: nftId});
+    async issue(operationId: string, uid: string, data: any, logic_mark: string = "") {
+        let op = await OperationEntity.findOne(operationId);
         if (op) {
-            return op;
+            return  {
+                new: false,
+                op
+            };
         }
 
-        const nftd = new NftEntity(nftId, uid, data, logic_mark);
-        op = new OperationEntity(nftId, Operation.ISSUE, {
+        let nftd = new NftEntity(data, logic_mark);
+        nftd = await nftd.save()
+        op = new OperationEntity(operationId, nftd.id, Operation.ISSUE, {
             uid,
             data,
             logic_mark
         });
-        await Promise.all([
-            op.save(), // todo: error check, WAL
-            nftd.save()
-        ]);
-        return op;
+        return {
+            new: true,
+            op: await op.save()
+        };
     }
 
     async burn(nftId: string) {

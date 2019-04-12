@@ -1,13 +1,13 @@
 import {IsDefined} from "class-validator";
 import {
-    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, PrimaryColumn,
+    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryColumn,
 } from "typeorm";
 
 @Entity("nft")
 export class NftEntity extends BaseEntity {
 
-    @PrimaryColumn()
-    public id: ObjectID; // idempotence hash should be provided by service
+    @ObjectIdColumn()
+    public id: ObjectID;
 
     @Column()
     public uid: string;
@@ -31,9 +31,9 @@ export class NftEntity extends BaseEntity {
     @Column()
     public lock_by: string = "";
 
-    constructor(id: string, uid: string, data: object, logic_mark: string = "") {
+    constructor(data: object, logic_mark: string = "") {
         super();
-        this.uid = uid;
         this.data = data;
+        this.logic_mark = logic_mark;
     }
 }
