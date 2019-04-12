@@ -22,19 +22,21 @@ describe(`validate owner_id ${owner_id}`, async function () {
     });
 
     beforeEach(async () => {
+        this.timeout(5000);
         loginSvr = exec("npx kh-loginsvr start -m");
         console.log("=> start login server mock");
-        await forMs(5000);
+        await forMs(1000);
         console.log("=> start test");
     })
 
     afterEach(async () => {
+        this.timeout(5000);
         await loginSvr.kill();
         console.log("=> end login server mock");
     })
 
     it('init empty', function (done) {
-        this.timeout(5000);
+        this.timeout(10000);
         createReq().get(`/v1/nft/list/${owner_id}`)
             .set('Accept', 'application/json')
             .send({})
@@ -51,7 +53,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
 
     it('issue without authorization', function (done) {
-        this.timeout(5000);
+        this.timeout(10000);
         createReq().post(`/v1/nft/issue`)
             .set('Accept', 'application/json')
             .set('server_id', `#`)
@@ -82,7 +84,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
     });
 
     it('issue', function (done) {
-        this.timeout(5000);
+        this.timeout(10000);
         let data = {
             op_id: `${new ObjectId()}`,
             owner_id,

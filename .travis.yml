@@ -5,4 +5,12 @@ sudo: false
 node_js:
   - "8"
 
-install:
+branches:
+  only:
+  - master
+
+services:
+  - docker
+
+script:
+  - docker-compose -f docker/docker-compose.travis.yml up

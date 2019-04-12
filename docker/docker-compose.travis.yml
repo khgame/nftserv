@@ -1,0 +1,20 @@
+version: '3'
+services:
+  kh-nftserv-mongo:
+    image: "mongo:latest"
+    command: mongod --smallfiles --logpath=/dev/null
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./docker/mongo/db:/data/db
+    ports:
+      - "27017:27017"
+  kh-nftserv-redis:
+    image: "redis"
+    command: [redis-server, /etc/redis.conf]
+    volumes:
+      - ./docker/redis/conf/redis.conf:/etc/redis.conf
+      - ./docker/redis/data:/data"
+    ports:
+      - "6379:6379"
