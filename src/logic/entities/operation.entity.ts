@@ -7,7 +7,7 @@ import {
     PrimaryColumn
 } from "typeorm";
 
-export enum Operation {
+export enum OperationCode {
     ISSUE,
     BURN,
     TRANSFER,
@@ -25,7 +25,7 @@ export class OperationEntity extends BaseEntity { // todo
     public nft_id: ObjectID;
 
     @Column()
-    public op: Operation;
+    public opCode: OperationCode;
 
     @Column()
     public params: any;
@@ -33,11 +33,11 @@ export class OperationEntity extends BaseEntity { // todo
     @CreateDateColumn()
     public created_at: Date;
 
-    constructor(opId: string, nftId: ObjectID, op: Operation, params: any) {
+    constructor(opId: string, nftId: ObjectID, opCode: OperationCode, params: any) {
         super();
         this.id = new ObjectID(opId);
         this.nft_id = nftId;
-        this.op = op;
+        this.opCode = opCode;
         this.params = params;
     }
 }

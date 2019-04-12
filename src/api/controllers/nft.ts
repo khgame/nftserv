@@ -24,27 +24,27 @@ export class NftController {
     @Authorized(["SERVICE", "GM"])
     public async issue(
         @Ctx() ctx: Context,
-        @CurrentUser() {sid}: { sid: string },
         @Body() body: {
-            nft_id: string
+            op_id: string
             uid: string
             data: string
             logic_mark: string
         }) {
-        ctx.assert.ok(sid, "invalid user");
-        return await this.nftService.issue(body.nft_id, sid, body.data, body.logic_mark);
+        ctx.assert.ok(body.uid, "invalid user");
+        return await this.nftService.issue(body.op_id, body.uid, body.data, body.logic_mark);
     }
 
     @Post("/burn")
     @Authorized(["SERVICE", "GM"])
-    public async consume(
+    public async burn(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
+            op_id: string
             nft_id: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return this.nftService.burn(body.nft_id); // mock todo
+        return this.nftService.burn(sid, body.op_id, body.nft_id); // mock todo
     }
 
     @Post("/update")
@@ -53,11 +53,12 @@ export class NftController {
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
+            op_id: string
             nft_id: string,
             data: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.nftService.update(sid, body.nft_id, body.data);
+        return await this.nftService.update(sid, body.op_id, body.nft_id, body.data);
     }
 
     @Post("/transfer")
@@ -66,13 +67,14 @@ export class NftController {
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {
+            op_id: string
             from: string
             to: string
             nft_id: string
             memo: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.nftService.transfer(sid, body.from, body.to, body.nft_id, body.memo);
+        return await this.nftService.transfer(sid, body.op_id, body.from, body.to, body.nft_id, body.memo);
     }
 
     @Post("/transaction")

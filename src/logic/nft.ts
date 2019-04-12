@@ -1,13 +1,16 @@
 import {Service} from "typedi";
-import {NftBurnEntity, NftEntity, Operation} from "./entities";
+import {NftBurnEntity, NftEntity, OperationCode, OperationEntity} from "./entities";
 import {redisLock, redisUnlock} from "./service/redis";
-import {OperationEntity} from "./entities/operation.entity";
+import {OperationService} from "./operation";
+import {LockService} from "./lock";
+import {ObjectID} from "typeorm";
 
 @Service()
 export class NftService {
     static inst: NftService;
 
-    constructor() {
+    constructor(public readonly opService: OperationService,
+                public readonly lockService: LockService) {
         NftService.inst = this;
         console.log("Service: instance created ", NftService.inst);
     }
@@ -21,7 +24,7 @@ export class NftService {
 
     async get(nftId: string) {
         if (!nftId) {
-            throw new Error('get info error: nftId connot be empty');
+            throw new Error('get nft error: nftId cannot be empty');
         }
         const nftd = await NftEntity.findOne(nftId); // todo: timeout logic
         if (!nftd) {
@@ -32,37 +35,30 @@ export class NftService {
 
     /**
      * issue an nft to a user
-     * @param {string} operationId - should be 24 characters random hash
+     * @param {string} opId - should be 32 characters random hex
      * @param {string} uid - user identity from the login server cluster
      * @param data - any data
      * @param {string} logic_mark - can be genre or something else, for indexing
      * @return {Promise<BaseEntity>}
      */
-    async issue(operationId: string, uid: string, data: any, logic_mark: string = "") {
-        let op = await OperationEntity.findOne(operationId);
+    async issue(opId: string, uid: string, data: any, logic_mark: string = "") {
+        let op = await this.opService.get(opId);
         if (op) {
-            return  {
-                new: false,
-                op
-            };
+            return {new: false, op};
         }
 
         let nftd = new NftEntity(data, logic_mark);
-        nftd = await nftd.save()
-        op = new OperationEntity(operationId, nftd.id, Operation.ISSUE, {
-            uid,
-            data,
-            logic_mark
-        });
+        nftd = await nftd.save();
+
         return {
             new: true,
-            op: await op.save()
+            op: await this.opService.create(opId, nftd.id, OperationCode.ISSUE, {data, logic_mark})
         };
     }
 
-    async burn(nftId: string) {
-        const lockResult = await redisLock(nftId, "");
-        if (!lockResult) {
+    async burn(serverId: string, opId: string, nftId: string) {
+        const mutex = await redisLock(nftId, "NftService:burn");
+        if (!mutex) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
@@ -80,45 +76,44 @@ export class NftService {
         return undefined;
     }
 
-    async transfer(serverId: string, from: string, to: string, nftId: string, memo: string) {
-        const lockResult = await redisLock(nftId, "");
-        if (!lockResult) {
+    async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
+        const mutex = await redisLock(nftId, "NftService:transfer");
+        if (!mutex) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
-        const info = await this.get(nftId);
-
-        if (info.shelf_channel) {
-            await redisUnlock(nftId, "");
-            throw new Error(`transfer error : nft<${nftId}> is shelf at ${info.shelf_channel}`);
-        }
-
-        if (info.lock_by !== serverId) {
-            await redisUnlock(nftId, "");
-            throw new Error(`unlock error : nft<${nftId}> is locked by another service ${info.lock_by}`);
-        }
-
-        if (info.uid !== from) {
-            await redisUnlock(nftId, "");
-            throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${info.uid}`);
-        }
-
         if (from === to) {
-            await redisUnlock(nftId, "");
+            await redisUnlock(nftId, "NftService:transfer");
             throw new Error(`transfer error : the from_account ${from} cannot be equal to to_account${to}`);
         }
 
-        info.uid = to;
-        // todo: record
+        const lock = await this.lockService.get(nftId);
+        if (lock && lock.locker !== serverId) {
+            await redisUnlock(nftId, "NftService:transfer");
+            throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
+        }
 
+        const info = await this.get(nftId);
+        if (info.uid !== from) {
+            await redisUnlock(nftId, "NftService:transfer");
+            throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${info.uid}`);
+        }
+
+        await this.opService.create(opId,
+            new ObjectID(nftId),
+            OperationCode.TRANSFER,
+            {from, to, memo}
+        );
+
+        info.uid = to;
         const ret = await info.save();
-        await redisUnlock(nftId, "");
+        await redisUnlock(nftId, "NftService:transfer");
         return ret;
     }
 
-    async update(serverId: string, nftId: string, data: any) {
-        const lockResult = await redisLock(nftId, "");
-        if (!lockResult) {
+    async update(serverId: string, opId: string, nftId: string, data: any) {
+        const mutex = await redisLock(nftId, "");
+        if (!mutex) {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
