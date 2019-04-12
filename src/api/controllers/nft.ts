@@ -2,6 +2,9 @@ import {API} from "../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Get, Param, Post} from "routing-controllers";
 import {NftService} from "../../logic/nft";
 import {Context} from "koa";
+import {genLogger} from "../../logic/service/logger";
+
+const log = genLogger("api:nft");
 
 @API("/nft")
 export class NftController {
@@ -30,7 +33,7 @@ export class NftController {
             logic_mark: string
         }) {
         ctx.assert.ok(body.owner_id, "invalid user");
-        console.log("issue body", body);
+        log.verbose("issue body", body);
         return await this.nftService.issue(body.op_id, body.owner_id, body.data, body.logic_mark);
     }
 

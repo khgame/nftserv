@@ -2,6 +2,8 @@ import {Service} from "typedi";
 import {redisLock, redisUnlock} from "./service/redis";
 import {ObjectID} from "mongodb";
 import {ILock, LockModel, LockStatus, LockTerminatedModel} from "./model";
+import {genLogger} from "./service/logger";
+const log = genLogger("s:lock");
 
 @Service()
 export class LockService {
@@ -9,7 +11,7 @@ export class LockService {
 
     constructor() {
         LockService.inst = this;
-        console.log("Service: instance created ", LockService.inst);
+        log.info("Service - instance created ", LockService.inst);
     }
 
     private async saveState(lock: ILock, state: LockStatus) {

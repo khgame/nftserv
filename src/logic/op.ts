@@ -1,6 +1,9 @@
 import {Service} from "typedi";
 import {ObjectID} from 'mongodb';
 import {OpCode, OpModel} from "./model";
+import {genLogger} from "./service/logger";
+
+const log = genLogger("s:op");
 
 @Service()
 export class OpService {
@@ -8,11 +11,11 @@ export class OpService {
 
     constructor() {
         OpService.inst = this;
-        console.log("Service: instance created ", OpService.inst);
+        log.info("Service - instance created ", OpService.inst);
     }
 
     async get(opId: string) {
-        console.log("get op", opId);
+        // log.verbose("get");
         if (!opId || opId.length !== 24) {
             throw new Error(`get op error: opId<${opId}> must be a single String of 24 hex character`);
         }
@@ -20,7 +23,7 @@ export class OpService {
     }
 
     async create(opId: string, nftId: ObjectID, opCode: OpCode, params: any) { // todo: sharding
-        console.log("op create:", opId);
+        // log.verbose("create");
         if (!opId || opId.length !== 24) {
             throw new Error('create op error: opId must be a single String of 24 hex character');
         }

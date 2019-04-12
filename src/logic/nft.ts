@@ -14,7 +14,7 @@ export class NftService {
     constructor(public readonly opService: OpService,
                 public readonly lockService: LockService) {
         NftService.inst = this;
-        console.log("Service: instance created ", NftService.inst);
+        log.info("Service - instance created ", NftService.inst);
     }
 
     /**
@@ -63,10 +63,10 @@ export class NftService {
      * @param {string} opId - should be 32 characters random hex
      * @param {string} ownerId - user identity from the login server cluster
      * @param data - any data
-     * @param {string} logic_mark - can be genre or something else, for indexing
+     * @param {string} logicMark - can be genre or something else, for indexing
      * @return {Promise<{new:boolean, op:IOp}>}
      */
-    async issue(opId: string, ownerId: string, data: any, logic_mark: string = "") {
+    async issue(opId: string, ownerId: string, data: any, logicMark: string = "") {
 
         let op = await this.opService.get(opId);
         if (op) {
@@ -74,10 +74,10 @@ export class NftService {
         }
 
         log.verbose("issue - create nftd");
-        let nftd = await NftModel.create({data, logic_mark});
+        let nftd = await NftModel.create({data, logic_mark: logicMark});
 
         log.verbose("issue - create op");
-        op = await this.opService.create(opId, nftd.id, OpCode.ISSUE, {data, logic_mark, owner_id: ownerId});
+        op = await this.opService.create(opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
         if (!op) {
             throw new Error(`issue error : create op<${opId}> record failed`);
         }

@@ -4,20 +4,20 @@ import * as Path from "path";
 import {Global} from "../src/global";
 
 import {createReq} from './createReq';
-import {initServices} from "service";
+import {initServices} from "../src/logic/service";
 import {ObjectId} from "bson";
-import {OperationCode} from "../bench/entities";
+import {OpCode} from "../src/logic/model";
 
 
-const uid = `${Math.random()}`;
-describe(`validate uid ${uid}`, async function () {
+const owner_id = `${Math.random()}`;
+describe(`validate owner_id ${owner_id}`, async function () {
     process.env.NODE_ENV = "production";
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     // await ();
     before(initServices);
 
     it('init empty', function (done) {
-        createReq().get(`/v1/nft/list/${uid}`)
+        createReq().get(`/v1/nft/list/${owner_id}`)
             .set('Accept', 'application/json')
             .send({})
             .expect('Content-Type', /json/)
@@ -38,11 +38,11 @@ describe(`validate uid ${uid}`, async function () {
             .set('server_id', `#`)
             .send({
                 op_id: `${Math.random()}`,
-                uid,
+                owner_id,
                 data: {test: 1},
                 logic_mark: "hero"
             })
-            // .expect('Content-Type', /json/)
+            .expect('Content-Type', /json/)
             .expect(403).end(done);
     });
 
@@ -52,11 +52,11 @@ describe(`validate uid ${uid}`, async function () {
             .set('server_id', `mock-server-identity`)
             .send({
                 op_id: `${Math.random()}`,
-                uid,
+                owner_id,
                 data: {test: 1},
                 logic_mark: "hero"
             })
-            // .expect('Content-Type', /json/)
+            .expect('Content-Type', /json/)
             .expect(500)
             .end(done);
     });
@@ -64,11 +64,11 @@ describe(`validate uid ${uid}`, async function () {
     it('issue', function (done) {
         let data = {
             op_id: `${new ObjectId()}`,
-            uid,
+            owner_id,
             data: {"test": 1},
             logic_mark: "hero"
         };
-        console.log("data", data);
+        // console.log("data", data);
         createReq().post(`/v1/nft/issue`)
             .set('Accept', 'application/json')
             .set('server_id', `mock-server-identity`)
@@ -80,10 +80,11 @@ describe(`validate uid ${uid}`, async function () {
                     done(err);
                 }
                 let result = res.body.result;
-                console.log("result", result);
+                // console.log("result", result);
                 assert.equal(result.new, true);
-                assert.equal(result.op.op_code, OperationCode.ISSUE);
-                assert.equal(result.op.op_id, data.op_id);
+                assert.equal(result.op._id, data.op_id);
+                assert.equal(result.op.op_code, OpCode.ISSUE);
+                assert.equal(result.op.params.owner_id, data.owner_id);
                 done();
             });
     });
