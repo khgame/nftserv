@@ -6,14 +6,13 @@ import {
     Entity,
     EntityManager,
     Index,
-    ObjectID,
     ObjectIdColumn,
     PrimaryColumn,
     Transaction, TransactionManager,
 } from "typeorm";
 import {redisUnlock} from "../service/redis";
 import {OperationEntity} from "./operation.entity";
-
+import {ObjectID} from 'mongodb';
 @Entity("nft")
 export class NftEntity extends BaseEntity {
 

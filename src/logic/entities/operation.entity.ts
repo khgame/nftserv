@@ -3,9 +3,9 @@ import {
     Column,
     CreateDateColumn,
     Entity, Index,
-    ObjectID,
     PrimaryColumn
 } from "typeorm";
+import {ObjectID} from 'mongodb';
 
 export enum OperationCode {
     NONE,

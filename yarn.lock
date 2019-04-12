@@ -24,6 +24,13 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/bson@*":
+  version "4.0.0"
+  resolved "http://registry.npm.taobao.org/@types/bson/download/@types/bson-4.0.0.tgz#9073772679d749116eb1dfca56f8eaac6d59cc7a"
+  integrity sha1-kHN3JnnXSRFusd/KVvjqrG1ZzHo=
+  dependencies:
+    "@types/node" "*"
+
 "@types/chai@^4.1.7":
   version "4.1.7"
   resolved "http://registry.npm.taobao.org/@types/chai/download/@types/chai-4.1.7.tgz#1b8e33b61a8c09cbe1f85133071baa0dbf9fa71a"
@@ -141,6 +148,14 @@
   version "5.2.6"
   resolved "http://registry.npm.taobao.org/@types/mocha/download/@types/mocha-5.2.6.tgz#b8622d50557dd155e9f2f634b7d68fd38de5e94b"
   integrity sha1-uGItUFV90VXp8vY0t9aP043l6Us=
+
+"@types/mongodb@^3.1.23":
+  version "3.1.23"
+  resolved "http://registry.npm.taobao.org/@types/mongodb/download/@types/mongodb-3.1.23.tgz#9aaa105f448427036cb6cd3aa042ab77b2ab8a7a"
+  integrity sha1-mqoQX0SEJwNsts06oEKrd7Krino=
+  dependencies:
+    "@types/bson" "*"
+    "@types/node" "*"
 
 "@types/node@*":
   version "11.13.0"

@@ -1,6 +1,6 @@
 import {Service} from "typedi";
 import {OperationCode, OperationEntity} from "./entities";
-import {ObjectID} from "typeorm";
+import {ObjectID} from 'mongodb';
 
 @Service()
 export class OperationService {

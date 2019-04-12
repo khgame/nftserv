@@ -4,13 +4,12 @@ import {
     CreateDateColumn,
     Entity,
     Index,
-    ObjectID,
     ObjectIdColumn,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
 import {OperationCode} from "./operation.entity";
-
+import {ObjectID} from 'mongodb';
 export enum LockStatus {
     INITIALED = 0,
     PREPARED = 1,

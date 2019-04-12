@@ -2,6 +2,7 @@ import {Service} from "typedi";
 import {redisLock, redisUnlock} from "./service/redis";
 import {Error} from "tslint/lib/error";
 import {LockEntity, LockStatus} from "./entities";
+import {ObjectID} from "mongodb";
 
 @Service()
 export class LockService {
@@ -13,7 +14,7 @@ export class LockService {
     }
 
     async get(nftId: string) {
-        const lock = await LockEntity.findOne({nft_id: nftId});
+        const lock = await LockEntity.findOne({nft_id: ObjectID.createFromHexString(nftId)});
         if (lock && lock.state === LockStatus.PREPARED) {
             // todo: time out
         }
