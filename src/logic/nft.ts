@@ -62,6 +62,12 @@ export class NftService {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
+        const lock = await this.lockService.get(nftId);
+        if (lock && lock.locker !== serverId) {
+            await redisUnlock(nftId, "NftService:update");
+            throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
+        }
+
         const nftd = await this.get(nftId);
         if (nftd) {
             const burn = new NftBurnEntity(nftd);
@@ -117,18 +123,14 @@ export class NftService {
             throw new Error(`shelf error : get mutex of nft<${nftId}> failed`);
         }
 
+
+        const lock = await this.lockService.get(nftId);
+        if (lock && lock.locker !== serverId) {
+            await redisUnlock(nftId, "NftService:update");
+            throw new Error(`unlock error : nft<${nftId}> is locked by another service ${lock.locker}`);
+        }
+
         const info = await this.get(nftId);
-
-        if (info.shelf_channel) {
-            await redisUnlock(nftId, "");
-            throw new Error(`transfer error : nft<${nftId}> is shelf at ${info.shelf_channel}`);
-        }
-
-        if (info.lock_by !== serverId) {
-            await redisUnlock(nftId, "");
-            throw new Error(`unlock error : nft<${nftId}> is locked by another service ${info.lock_by}`);
-        }
-
         info.data = data;
         // todo: record
         const ret = await info.save();

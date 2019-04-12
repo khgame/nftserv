@@ -1,6 +1,6 @@
 import {IsDefined} from "class-validator";
 import {
-    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryColumn,
+    BaseEntity, Column, CreateDateColumn, Entity, Index, ObjectID, ObjectIdColumn, PrimaryColumn,
 } from "typeorm";
 import {NftEntity} from "./nft.entity";
 
@@ -10,9 +10,11 @@ export class NftBurnEntity extends BaseEntity {
     @PrimaryColumn()
     public id: ObjectID;
 
+    @Index()
     @Column()
     public uid: string;
 
+    @Index()
     @Column()
     public logic_mark: string;
 
@@ -32,9 +34,6 @@ export class NftBurnEntity extends BaseEntity {
     @Column()
     public shelf_price: number = 0;
 
-    @Column()
-    public lock_by: string = "";
-
     constructor(nftData: NftEntity) {
         super();
         this.id = nftData.id;
@@ -42,6 +41,5 @@ export class NftBurnEntity extends BaseEntity {
         this.data = nftData.data;
         this.created_at = nftData.created_at;
         this.logic_mark = nftData.logic_mark;
-        this.lock_by = nftData.lock_by;
     }
 }

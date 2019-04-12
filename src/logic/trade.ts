@@ -4,7 +4,7 @@ import {redisLock, redisUnlock} from "./service/redis";
 import {Error} from "tslint/lib/error";
 import {NftService} from "./nft";
 
-@Service()
+@Service() // todo: make trade an agent
 export class TradeService {
     static inst: TradeService;
 
@@ -28,10 +28,10 @@ export class TradeService {
             throw new Error(`shelf error : nft<${nftId}> owner error, expected ${info.uid}, got ${userId}`);
         }
 
-        if (info.lock_by) {
-            await redisUnlock(nftId, "");
-            throw new Error(`shelf error : nft<${nftId}> has already been locked by ${info.lock_by}`);
-        }
+        // if (info.lock_by) {
+        //     await redisUnlock(nftId, "");
+        //     throw new Error(`shelf error : nft<${nftId}> has already been locked by ${info.lock_by}`);
+        // }
 
         if (!shelfChannel) {
             await redisUnlock(nftId, "");

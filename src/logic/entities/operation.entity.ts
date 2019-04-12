@@ -2,12 +2,13 @@ import {
     BaseEntity,
     Column,
     CreateDateColumn,
-    Entity,
+    Entity, Index,
     ObjectID,
     PrimaryColumn
 } from "typeorm";
 
 export enum OperationCode {
+    NONE,
     ISSUE,
     BURN,
     TRANSFER,
@@ -21,10 +22,16 @@ export class OperationEntity extends BaseEntity { // todo
     @PrimaryColumn()
     public id: ObjectID;
 
+    @Index()
     @Column()
     public nft_id: ObjectID;
 
-    @Column()
+    @Index()
+    @Column({
+        type: "enum",
+        enum: OperationCode,
+        default: OperationCode.NONE
+    })
     public opCode: OperationCode;
 
     @Column()

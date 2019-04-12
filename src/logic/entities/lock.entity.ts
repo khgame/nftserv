@@ -1,6 +1,15 @@
 import {
-    BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn, PrimaryGeneratedColumn, UpdateDateColumn,
+    BaseEntity,
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    ObjectID,
+    ObjectIdColumn,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from "typeorm";
+import {OperationCode} from "./operation.entity";
 
 export enum LockStatus {
     INITIALED = 0,
@@ -21,14 +30,16 @@ export class LockEntity extends BaseEntity {
     @ObjectIdColumn()
     public id: ObjectID;
 
-    @Column()
-    public idempotent_hash: string;
-
+    @Index()
     @Column()
     public nft_id: ObjectID; // todo: indexing
 
-    @Column()
-    public state: LockStatus = LockStatus.INITIALED;
+    @Column({
+        type: "enum",
+        enum: LockStatus,
+        default: LockStatus.INITIALED
+    })
+    public state: LockStatus;
 
     @Column()
     public locker: string = "";
@@ -67,6 +78,7 @@ export class LockFinishedEntity extends BaseEntity {
     @ObjectIdColumn()
     public id: ObjectID;
 
+    @Index()
     @Column()
     public nft_id: string;
 
