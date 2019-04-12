@@ -44,7 +44,7 @@ export class NftService {
     async issue(opId: string, uid: string, data: any, logic_mark: string = "") {
         let op = await this.opService.get(opId);
         if (op) {
-            return {new: false, op};
+            return {new: false, op, time_offset_ms : Date.now() - op.created_at.getTime()};
         }
 
         let nftd = new NftEntity(data, logic_mark);
@@ -62,7 +62,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
-            return {new: false, op};
+            return {new: false, op, time_offset_ms : Date.now() - op.created_at.getTime()};
         }
 
         const lock = await this.lockService.get(nftId);
@@ -87,7 +87,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
-            return {new: false, op};
+            return {new: false, op, time_offset_ms : Date.now() - op.created_at.getTime()};
         }
 
         if (from === to) {
@@ -123,7 +123,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
-            return {new: false, op};
+            return {new: false, op, time_offset_ms : Date.now() - op.created_at.getTime()};
         }
 
         const lock = await this.lockService.get(nftId);
