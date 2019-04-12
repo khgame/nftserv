@@ -69,17 +69,9 @@ export class NftService {
         }
 
         const nftd = await this.get(nftId);
-        if (nftd) {
-            const burn = new NftBurnEntity(nftd);
-            const ret = await Promise.all([
-                burn.save(),
-                nftd.remove()
-            ]);
-            await redisUnlock(nftId, "");
-            return ret[0];
-        }
+        let ret = await nftd.burn();
         await redisUnlock(nftId, "");
-        return undefined;
+        return ret;
     }
 
     async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
