@@ -14,8 +14,10 @@ export class LockService {
 
     async get(nftId: string) {
         const lock = await LockEntity.findOne({nft_id: nftId});
-        if (lock && lock.state === LockStatus.PREPARED) {
-            // todo: time out
+        if (lock && lock.state === LockStatus.PREPARED && Date.now() - lock.update_at.getTime() > 5 * 60 * 1000) { // time out in 5 minutes
+            await lock.saveState(LockStatus.TIMEOUT);
+            // set to time out and move it to trash is the only rollback operation
+            return;
         }
         return lock;
     }
