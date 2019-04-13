@@ -253,4 +253,12 @@ describe(`validate owner_id ${owner_id}`, async function () {
             });
     });
 
+    // todo: transfer
+
+    // todo: burn
+
+    // todo: check all operations
+
+    // todo:
+
 });

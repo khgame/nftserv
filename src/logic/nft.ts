@@ -51,7 +51,7 @@ export class NftService {
      * @param {string} nftId
      * @return {Promise<any>}
      */
-    async get(nftId: string) {
+    async get(nftId: string) { // todo: also get from the trash can
         if (!nftId) {
             throw new Error('get nft error: nftId cannot be empty');
         }
@@ -76,7 +76,7 @@ export class NftService {
         log.verbose("issue - create nftd");
         let nftd = await NftModel.create({data, logic_mark: logicMark});
 
-        log.verbose("issue - create op");
+        log.verbose("issue - create op"); // todo: execute mute operation according op recordes. consider about revive and abort procedure.
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
         if (!op) {
             throw new Error(`issue error : create op<${opId}> record failed`);
