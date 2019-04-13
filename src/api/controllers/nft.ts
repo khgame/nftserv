@@ -26,15 +26,16 @@ export class NftController {
     @Authorized(["SERVICE", "GM"])
     public async issue(
         @Ctx() ctx: Context,
+        @CurrentUser() {sid}: { sid: string },
         @Body() body: {
             op_id: string
             owner_id: string
             data: any
             logic_mark: string
         }) {
-        ctx.assert.ok(body.owner_id, "invalid user");
-        log.verbose("issue body", body);
-        return await this.nftService.issue(body.op_id, body.owner_id, body.data, body.logic_mark);
+        ctx.assert.ok(sid, "invalid server id");
+        // log.verbose("issue body", body);
+        return await this.nftService.issue(sid, body.op_id, body.owner_id, body.data, body.logic_mark);
     }
 
     @Post("/burn")

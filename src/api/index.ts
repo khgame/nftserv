@@ -47,7 +47,7 @@ export class ApiApplication {
             controllers: objectToArray(controllers),
             classTransformer: false,
             currentUserChecker: async (action: Action) => {
-                console.log("request", action.request);
+                // console.log("request", action.request);
                 const server_id = action.request.headers.server_id;
                 const session_id = action.request.headers.session_id;
                 const result: any = {sid: server_id};

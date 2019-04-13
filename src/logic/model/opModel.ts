@@ -23,6 +23,11 @@ export interface IOp extends Document {
     nft_id: ObjectID;
 
     /**
+     * id of service who created this operation
+     */
+    creator: string;
+
+    /**
      * op code
      */
     op_code: OpCode;
@@ -37,12 +42,12 @@ export interface IOp extends Document {
      */
     created_at: Date;
 
-
 }
 
 const OpSchema = new Schema({
     _id: { type: String, required: true },
     nft_id: {type: ObjectID, required: true},
+    creator: { type: String, required: true },
     op_code: {type: OpCode, required: true, default: OpCode.NONE},
     params: {type: Object, default: {}}, // 买单生成时间
     created_at: {type: Date}, // 买单生成时间

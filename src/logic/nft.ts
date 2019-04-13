@@ -66,7 +66,7 @@ export class NftService {
      * @param {string} logicMark - can be genre or something else, for indexing
      * @return {Promise<{new:boolean, op:IOp}>}
      */
-    async issue(opId: string, ownerId: string, data: any, logicMark: string = "") {
+    async issue(serverId: string, opId: string, ownerId: string, data: any, logicMark: string = "") {
 
         let op = await this.opService.get(opId);
         if (op) {
@@ -77,7 +77,7 @@ export class NftService {
         let nftd = await NftModel.create({data, logic_mark: logicMark});
 
         log.verbose("issue - create op");
-        op = await this.opService.create(opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
+        op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
         if (!op) {
             throw new Error(`issue error : create op<${opId}> record failed`);
         }
@@ -122,7 +122,7 @@ export class NftService {
             throw new Error(`burn error : nft<${nftId}> is not exist`);
         }
 
-        op = await this.opService.create(opId, nftd.id, OpCode.BURN, {nftd});
+        op = await this.opService.create(serverId, opId, nftd.id, OpCode.BURN, {nftd});
         if (!op) {
             throw new Error(`burn error : create op<${opId}> record failed`);
         }
@@ -170,7 +170,7 @@ export class NftService {
             throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${nftd.owner_id}`);
         }
 
-        op = await this.opService.create(opId, nftd.id, OpCode.TRANSFER, {from, to, memo});
+        op = await this.opService.create(serverId, opId, nftd.id, OpCode.TRANSFER, {from, to, memo});
         if (!op) {
             throw new Error(`transfer error : create op<${opId}> record failed`);
         }
@@ -208,7 +208,7 @@ export class NftService {
             throw new Error(`update error : nft<${nftId}> is not exist`);
         }
 
-        op = await this.opService.create(opId, nftd.id, OpCode.UPDATE, {data});
+        op = await this.opService.create(serverId, opId, nftd.id, OpCode.UPDATE, {data});
         if (!op) {
             throw new Error(`update error : create op<${opId}> record failed`);
         }

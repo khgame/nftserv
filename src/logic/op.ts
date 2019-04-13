@@ -22,7 +22,7 @@ export class OpService {
         return await OpModel.findOne({_id: opId});
     }
 
-    async create(opId: string, nftId: ObjectID, opCode: OpCode, params: any) { // todo: sharding
+    async create(serviceId: string, opId: string, nftId: ObjectID, opCode: OpCode, params: any) { // todo: sharding
         // log.verbose("create");
         if (!opId || opId.length !== 24) {
             throw new Error('create op error: opId must be a single String of 24 hex character');
@@ -31,6 +31,7 @@ export class OpService {
             _id: opId,
             nft_id: nftId,
             op_code: opCode,
+            creator: serviceId,
             params
         });
     }
