@@ -10,7 +10,5 @@ branches:
   - master
 
 services:
-  - docker
-
-script:
-  - docker-compose -f docker/docker-compose.travis.yml up -d
+  - redis-server
+  - mongodb
