@@ -49,6 +49,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
     after(async () => {
         await loginSvr.kill();
         console.log("=> end login server mock");
+        process.exit(0);
     });
 
     it('/v1/nft/list : init empty', function (done) {
