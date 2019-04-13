@@ -78,7 +78,7 @@ export class NftController {
             memo: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.nftService.transfer(sid, body.op_id, body.from, body.to, body.nft_id, body.memo);
+        return await this.nftService.transfer(sid, body.op_id, body.nft_id, body.from, body.to,  body.memo);
     }
 
     @Post("/transaction")

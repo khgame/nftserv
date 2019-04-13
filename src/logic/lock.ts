@@ -13,7 +13,7 @@ export class LockService {
     constructor() {
         LockService.inst = this;
         this.log = genLogger("s:lock");
-        this.log.info("Service - instance created ", LockService.inst);
+        this.log.debug("Service - instance created ", LockService.inst);
     }
 
     private async saveState(lock: ILock, state: LockStatus) {

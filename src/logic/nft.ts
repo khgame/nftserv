@@ -15,7 +15,7 @@ export class NftService {
                 public readonly lockService: LockService) {
         NftService.inst = this;
         this.log = genLogger("s:nft");
-        this.log.info("Service - instance created ", NftService.inst);
+        this.log.debug("Service - instance created ", NftService.inst);
     }
 
     /**
@@ -109,6 +109,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
+            await redisUnlock(nftId, "NftService:burn");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
@@ -148,6 +149,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
+            await redisUnlock(nftId, "NftService:transfer");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
@@ -197,6 +199,7 @@ export class NftService {
 
         let op = await this.opService.get(opId);
         if (op) {
+            await redisUnlock(nftId, "NftService:update");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 

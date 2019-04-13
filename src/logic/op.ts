@@ -12,7 +12,7 @@ export class OpService {
     constructor() {
         OpService.inst = this;
         this.log = genLogger("s:op");
-        this.log.info("Service - instance created ", OpService.inst);
+        this.log.debug("Service - instance created ", OpService.inst);
     }
 
     async get(opId: string) {
