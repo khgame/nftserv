@@ -36,7 +36,7 @@ export const genLogger = (prefix: string) => createLogger({
     ),
     transports: [
         new transports.Console({
-            level: "verbose",
+            level: (!process.env.NODE_ENV || process.env.NODE_ENV === "development") ? "verbose" : "info",
             format: format.combine(
                 format.colorize(),
                 format.printf((info) =>

@@ -4,17 +4,18 @@ import {OpService} from "./op";
 import {LockService} from "./lock";
 import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
 import {genLogger} from "./service/logger";
-
-const log = genLogger("s:nft");
+import {Logger} from "winston";
 
 @Service()
 export class NftService {
     static inst: NftService;
+    log: Logger;
 
     constructor(public readonly opService: OpService,
                 public readonly lockService: LockService) {
         NftService.inst = this;
-        log.info("Service - instance created ", NftService.inst);
+        this.log = genLogger("s:nft");
+        this.log.info("Service - instance created ", NftService.inst);
     }
 
     /**
@@ -60,6 +61,7 @@ export class NftService {
 
     /**
      * issue an nft to a user
+     * @param {string} serverId - id of the service
      * @param {string} opId - should be 32 characters random hex
      * @param {string} ownerId - user identity from the login server cluster
      * @param data - any data
@@ -73,27 +75,27 @@ export class NftService {
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
-        log.verbose("issue - create nftd");
+        this.log.verbose("issue - create nftd");
         let nftd = await NftModel.create({data, logic_mark: logicMark});
 
-        log.verbose("issue - create op"); // todo: execute mute operation according op recordes. consider about revive and abort procedure.
+        this.log.verbose("issue - create op"); // todo: execute mute operation according op recordes. consider about revive and abort procedure.
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
         if (!op) {
             throw new Error(`issue error : create op<${opId}> record failed`);
         }
 
-        log.verbose("issue - set user");
+        this.log.verbose("issue - set user");
         const result = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {owner_id: ownerId}});
         if (!result) {
             throw new Error(`issue error : set owner_id<${ownerId}> to nft<${nftd._id}> failed`);
         }
 
-        log.verbose("issue - success");
+        this.log.verbose("issue - success");
         return {new: true, op};
     }
 
     /**
-     *
+     * burn the nft
      * @param {string} serverId - the locker id, generally its a server
      * @param {string} opId - operation id provided by server, is should be a single String of 24 hex character.
      * @param {string} nftId - nft id
