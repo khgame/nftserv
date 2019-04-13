@@ -112,28 +112,29 @@ export class NftService {
 
         const lock = await this.lockService.get(nftId);
         if (lock && lock.locker !== serverId) {
-            await redisUnlock(nftId, "NftService:update");
+            await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : nft<${nftId}> is locked by another service ${lock.locker}`);
         }
 
         const nftd = await this.get(nftId);
         if (!nftd) {
-            await redisUnlock(nftId, "NftService:update");
+            await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : nft<${nftId}> is not exist`);
         }
 
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.BURN, {nftd});
         if (!op) {
+            await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : create op<${opId}> record failed`);
         }
 
         const burn = await this.deleteOne(nftd);
         if (!burn) {
-            await redisUnlock(nftId, "NftService:update");
+            await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : burn nft<${nftId}> failed`);
         }
 
-        await redisUnlock(nftId, "");
+        await redisUnlock(nftId, "NftService:burn");
         return {new: true, op};
     }
 
@@ -172,6 +173,7 @@ export class NftService {
 
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.TRANSFER, {from, to, memo});
         if (!op) {
+            await redisUnlock(nftId, "NftService:transfer");
             throw new Error(`transfer error : create op<${opId}> record failed`);
         }
 
@@ -210,16 +212,17 @@ export class NftService {
 
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.UPDATE, {data});
         if (!op) {
+            await redisUnlock(nftId, "NftService:update");
             throw new Error(`update error : create op<${opId}> record failed`);
         }
 
         const setResult = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {data}});
         if (!setResult) {
-            await redisUnlock(nftId, "NftService:transfer");
+            await redisUnlock(nftId, "NftService:update");
             throw new Error(`update error : set nft<${nftId}>'s data to ${data} failed`);
         }
 
-        await redisUnlock(nftId, "");
+        await redisUnlock(nftId, "NftService:update");
         return {new: true, op};
     }
 }
