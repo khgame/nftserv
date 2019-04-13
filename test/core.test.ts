@@ -40,19 +40,15 @@ describe(`validate owner_id ${owner_id}`, async function () {
     let loginSvr: ChildProcess;
     before(async () => {
         await initServices();
-    });
-
-    beforeEach(async () => {
-        this.timeout(2000);
+        console.log("=> start login server mock");
         loginSvr = exec("npx kh-loginsvr start -m");
-        // console.log("=> start login server mock");
         await forMs(1000);
-        // console.log("=> start test");
+        console.log("=> start test");
     });
 
-    afterEach(async () => {
+    after(async () => {
         await loginSvr.kill();
-        // console.log("=> end login server mock");
+        console.log("=> end login server mock");
     });
 
     it('/v1/nft/list : init empty', function (done) {
@@ -242,13 +238,12 @@ describe(`validate owner_id ${owner_id}`, async function () {
             .set('Accept', 'application/json')
             .set('server_id', `mock-server-identity`)
             .send(updateData)
-            // .expect('Content-Type', /json/)
-            // .expect(200)
+            .expect('Content-Type', /json/)
+            .expect(200)
             .end(function (err, res) {
                 if (err) {
                     done(err);
                 }
-                console.log(res);
                 assert.equal(res.body.result.new, false);
                 assert.equal(res.body.result.op.creator, 'mock-server-identity');
                 assert.equal(res.body.result.op._id, updateData.op_id);

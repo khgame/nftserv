@@ -13,4 +13,4 @@ services:
   - docker
 
 script:
-  - docker-compose -f docker/docker-compose.travis.yml up
+  - docker-compose -f docker/docker-compose.travis.yml up -d
