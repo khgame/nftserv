@@ -40,7 +40,9 @@ describe(`validate owner_id ${owner_id}`, async function () {
     before(async () => {
         await initServices();
         console.log("=> start login server mock");
-        loginSvr = exec("npx kh-loginsvr start -m");
+        loginSvr = exec("npx kh-loginsvr start -m", function (err) {
+            console.log('child exit code (exec)', err!.code);
+        });
         await forMs(1000);
         console.log("=> start test");
     });
@@ -188,8 +190,12 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     // todo: 4. execute each operation without the correct locker
 
-    // todo: 5. release lock
+    // todo: 5. abort
 
-    // todo: 6. execute each operation in unlock state
+    // todo: 6. continue
+
+    // todo: 7. release lock
+
+    // todo: 8. execute each operation in unlock state
 
 });
