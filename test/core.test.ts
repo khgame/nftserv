@@ -2,7 +2,7 @@ import {assert} from "chai";
 import * as Path from "path";
 import {Global} from "../src/global";
 
-import {spawn, exec, ChildProcessWithoutNullStreams, ChildProcess} from 'child_process';
+import {spawn, exec, ChildProcess} from 'child_process';
 
 import {createReq} from './createReq';
 import {initServices} from "../src/logic/service";
@@ -116,7 +116,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     describe("2. issue", function () {
 
-        it('/v1/nft/issue : only post method', function (done) {
+        it('/v1/nft/issue : only enable post method', function (done) {
             createReq().get(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .send({
@@ -218,6 +218,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     done();
                 });
         });
+
     });
 
     describe("3. list & get : exist", function () {

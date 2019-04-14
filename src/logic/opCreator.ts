@@ -2,7 +2,7 @@ import {Service} from "typedi";
 import {redisLock, redisUnlock} from "./service/redis";
 import {OpService} from "./op";
 import {LockService} from "./lock";
-import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
+import {OpCode} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
@@ -50,7 +50,7 @@ export class OpCreatorService {
         op = await this.opService.exec(op._id);
 
         this.log.verbose("issue - created");
-        return {new: true, op };
+        return {new: true, op};
     }
 
     /**
@@ -101,6 +101,7 @@ export class OpCreatorService {
         }
 
         try {
+
             op = await this.opService.create(serverId, opId, nftId, OpCode.UPDATE, {data});
             this.assert.ok(op, () => `update error : create op<${opId}> record`);
 
@@ -128,6 +129,7 @@ export class OpCreatorService {
         }
 
         try {
+
             op = await this.opService.create(serverId, opId, nftId, OpCode.TRANSFER, {from, to, memo});
             this.assert.ok(op, () => `transfer error : create op<${opId}> failed`);
 

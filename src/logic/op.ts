@@ -24,6 +24,24 @@ export class OpService {
     log: Logger = genLogger("s:op");
     assert: Assert = genAssert("s:op");
 
+    enabled: boolean = true;
+
+    operationInProgress: {
+        issue: number
+        burn: number
+        update: number
+        transfer: number
+    } = {
+        issue: 0,
+        burn: 0,
+        update: 0,
+        transfer: 0,
+    };
+
+    get runningCounts() {
+        return Object.values(this.operationInProgress).reduce((p, v) => p + v, 0);
+    }
+
     constructor(
         public readonly nftService: NftService,
         public readonly lockService: LockService) {
@@ -119,14 +137,19 @@ export class OpService {
         await this.nftService.assertNftDoNotExist(op.nft_id);
 
         try {
+            this.operationInProgress.issue += 1;
+
             const {owner_id, logic_mark, data} = params;
 
             this.log.verbose("exec issue - create nft");
             let nft = await NftModel.create({_id: op.nft_id, owner_id, logic_mark, data});
-            this.assert.ok(nft, `issue error : create nftd failed`);
+            this.assert.ok(nft, `issue error : create nft failed`);
 
-            return await this.commit(op);
+            let ret = await this.commit(op);
+            this.operationInProgress.issue -= 1;
+            return ret;
         } catch (ex) {
+            this.operationInProgress.issue -= 1;
             return await this.abort(op);
         }
     }
@@ -136,6 +159,8 @@ export class OpService {
         const nft = await this.nftService.assertNftAlive(op.nft_id);
 
         try {
+            this.operationInProgress.burn += 1;
+
             /** write operations
              * 1. create operation
              * 2. delete nft
@@ -146,14 +171,18 @@ export class OpService {
             const {_id, owner_id, logic_mark, data, created_at, update_at} = nft!;
             const nftT = await NftTerminatedModel.create({_id, owner_id, logic_mark, data, created_at, update_at});
             this.assert.ok(nftT, () => `burn error: create terminated nft<${op.nft_id}> failed`);
-            this.log.info("deleteOne - nft_terminated created " + op.nft_id + " => " + nftT._id);
+            this.log.info("burn - nft_terminated created " + op.nft_id + " => " + nftT._id);
 
-            const ret = await NftModel.deleteOne({_id: op.nft_id});
-            this.log.info("deleteOne - nft removed " + op.nft_id);
-            this.assert.ok(ret, () => `deleteOne error: delete nft<${op.nft_id}> failed`);
+            const deleteResult = await NftModel.deleteOne({_id: op.nft_id});
+            this.log.info("burn - nft removed " + op.nft_id);
+            this.assert.ok(deleteResult, () => `deleteOne error: delete nft<${op.nft_id}> failed`);
 
-            return await this.commit(op);
+            let ret = await this.commit(op);
+
+            this.operationInProgress.burn -= 1;
+            return ret;
         } catch (ex) {
+            this.operationInProgress.burn -= 1;
             return await this.abort(op);
         }
     }
@@ -163,6 +192,7 @@ export class OpService {
         await this.nftService.assertNftAlive(op.nft_id);
 
         try {
+            this.operationInProgress.update += 1;
             const {data} = params;
 
             /** write operations
@@ -172,8 +202,12 @@ export class OpService {
             const nft = await NftModel.findByIdAndUpdate(op.nft_id, {$set: {data}});
             this.assert.ok(nft, () => `update error : set nft<${op.nft_id}>'s data to ${data} failed`);
 
-            return await this.commit(op);
+            let ret = await this.commit(op);
+
+            this.operationInProgress.update -= 1;
+            return ret;
         } catch (ex) {
+            this.operationInProgress.update -= 1;
             return await this.abort(op);
         }
     }
@@ -184,6 +218,7 @@ export class OpService {
         const nft = await this.assertCanTransfer(op.nft_id, params);
 
         try {
+            this.operationInProgress.transfer += 1;
             const {to} = params;
 
             /** write operations
@@ -193,9 +228,11 @@ export class OpService {
             const ret = await NftModel.findOneAndUpdate({_id: op.nft_id}, {$set: {owner_id: to}});
             this.assert.ok(ret, () => `transfer error : set nft<${op.nft_id}>'s owner to ${to} failed`);
 
+            this.operationInProgress.transfer -= 1;
             return await this.commit(op);
         }
         catch (ex) {
+            this.operationInProgress.transfer -= 1;
             return await this.abort(op);
         }
     }
