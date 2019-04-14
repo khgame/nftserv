@@ -16,7 +16,7 @@ import {forMs} from "kht";
  */
 
 const owner_id = `${Math.random()}`;
-const requestBolb = {
+const issueBlob = {
     op_id: `${new ObjectId()}`,
     owner_id,
     data: {"test": 1},
@@ -60,7 +60,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
             createReq().post(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
-                .send(requestBolb)
+                .send(issueBlob)
                 // .expect('Content-Type', /json/)
                 .expect(200)
                 .end(function (err, res) {
@@ -70,7 +70,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     }
                     let result = res.body.result;
                     assert.equal(result.new, true);
-                    assert.equal(result.op._id, requestBolb.op_id);
+                    assert.equal(result.op._id, issueBlob.op_id);
                     voteBlob.nft_id = result.op.nft_id;
                     done();
                 });
@@ -186,13 +186,67 @@ describe(`validate owner_id ${owner_id}`, async function () {
     });
 
 
-    // todo: 3. execute each operation without the correct locker
+    describe("3. execute each operation when locker state is prepared", function () {
+        const updateBlob = {
+            op_id: `${new ObjectId()}`,
+            nft_id: voteBlob.nft_id,
+            data: {
+                name: "poko",
+                level: 3,
+                category: "cat"
+            }
+        };
+        const transferBlob = {
+            op_id: `${new ObjectId()}`,
+            nft_id: voteBlob.nft_id,
+            from: owner_id,
+            to: 'the-test-receiver',
+            memo: 'memo'
+        };
+        const burnBlob = {
+            op_id: `${new ObjectId()}`,
+            nft_id: voteBlob.nft_id,
+        };
 
-    // todo: 4. execute each operation without the correct locker
+        it('/v1/nft/update : update nft when lock PREPARED', function (done) {
+            createReq().post(`/v1/nft/update`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(updateBlob)
+                .expect('Content-Type', /json/)
+                .expect(500)
+                .end(done);
+        });
 
-    // todo: 5. abort
+        it('/v1/nft/transfer : transfer nft when lock PREPARED', function (done) {
+            createReq().post(`/v1/nft/transfer`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(transferBlob)
+                .expect('Content-Type', /json/)
+                .expect(500)
+                .end(done);
+        });
+
+        it('/v1/nft/burn : burn nft when lock PREPARED', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(burnBlob)
+                .expect('Content-Type', /json/)
+                .expect(500)
+                .end(done);
+        });
+
+    });
+
+    // todo: 4. abort
+
+    // todo: 5. execute each operation when locker state is committed
 
     // todo: 6. continue
+
+    // todo: 7. execute each operation without locker
 
     // todo: 7. release lock
 
