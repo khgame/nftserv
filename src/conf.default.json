@@ -14,7 +14,8 @@
     "family": 4,
     "host": "127.0.0.1",
     "port": 6379,
-    "keyPrefix": "KH_NFTServ_default_redisKey:"
+    "keyPrefix": "KH_NFTServ_default_redisKey:",
+    "key_mutex_wait_threshold": 100
   },
   "rpc": {
     "login": {
