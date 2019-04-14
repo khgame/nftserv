@@ -2,7 +2,7 @@ import {Service} from "typedi";
 import {ObjectID} from 'mongodb';
 import {
     IBurnParams,
-    IIssueParams,
+    IIssueParams, INft,
     ITransferParams,
     IUpdateParams,
     NftModel,
@@ -15,6 +15,8 @@ import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {IOp} from "./model";
 import {Assert, genAssert} from "./service/assert";
+import {LockService} from "./lock";
+import {NftService} from "./nft";
 
 @Service()
 export class OpService {
@@ -22,10 +24,12 @@ export class OpService {
     log: Logger = genLogger("s:op");
     assert: Assert = genAssert("s:op");
 
-    constructor() {
+    constructor(
+        public readonly nftService: NftService,
+        public readonly lockService: LockService) {
         OpService.inst = this;
         this.log.debug("Service - instance created ", OpService.inst);
-    }
+    } // todo: sharding
 
     async get(opId: string): Promise<IOp | null> {
         if (!opId || opId.length !== 24) {
@@ -34,21 +38,35 @@ export class OpService {
         return await OpModel.findOne({_id: opId});
     }
 
-    async create(serviceId: string, opId: string, nftId: ObjectID, opCode: OpCode, params: any) { // todo: sharding
+    async create(
+        creator: string,
+        opId: string,
+        nftId: ObjectID | string,
+        opCode: OpCode,
+        params: IIssueParams | IBurnParams | IUpdateParams | ITransferParams
+    ) {
         if (!opId || opId.length !== 24) {
             throw new Error('create op error: opId must be a single String of 24 hex character');
         }
         switch (opCode) {
             case OpCode.ISSUE:
+                await this.nftService.assertNftDoNotExist(nftId);
                 this.assert.ok(params as IIssueParams, `op create error: params should be IIssueParams`);
                 break;
             case OpCode.BURN:
+                await this.lockService.assertLock(creator, opId);
+                await this.nftService.assertNftAlive(nftId);
                 this.assert.ok(params as IBurnParams, `op create error: params should be IBurnParams`);
                 break;
             case OpCode.UPDATE:
+                await this.lockService.assertLock(creator, opId);
+                await this.nftService.assertNftAlive(nftId);
                 this.assert.ok(params as IUpdateParams, `op create error: params should be IUpdateParams`);
                 break;
             case OpCode.TRANSFER:
+                await this.lockService.assertLock(creator, opId);
+                await this.nftService.assertNftAlive(nftId);
+                await this.assertCanTransfer(nftId, params as ITransferParams);
                 this.assert.ok(params as ITransferParams, `op create error: params should be ITransferParams`);
                 break;
             default:
@@ -59,7 +77,7 @@ export class OpService {
             _id: opId,
             nft_id: nftId,
             op_code: opCode,
-            creator: serviceId,
+            creator: creator,
             params
         });
     }
@@ -98,13 +116,14 @@ export class OpService {
 
     private async execIssue(params: IIssueParams, op: IOp) {
         this.log.verbose("exec issue start");
-        try {
+        await this.nftService.assertNftDoNotExist(op.nft_id);
 
+        try {
             const {owner_id, logic_mark, data} = params;
 
             this.log.verbose("exec issue - create nft");
-            let nftd = await NftModel.create({_id: op.nft_id, owner_id, logic_mark, data});
-            this.assert.ok(nftd, `issue error : create nftd failed`);
+            let nft = await NftModel.create({_id: op.nft_id, owner_id, logic_mark, data});
+            this.assert.ok(nft, `issue error : create nftd failed`);
 
             return await this.commit(op);
         } catch (ex) {
@@ -114,20 +133,17 @@ export class OpService {
 
     private async execBurn(params: IBurnParams, op: IOp) {
         this.log.verbose("exec burn start");
+        const nft = await this.nftService.assertNftAlive(op.nft_id);
+
         try {
-
-            const nftd = await NftModel.findOne({_id: op.nft_id});
-            this.assert.ok(nftd, () => `burn error : nft<${op.nft_id}> is not exist`);
-
             /** write operations
              * 1. create operation
              * 2. delete nft
              *  1. create nftT
              *  2. remove nft
              */
-
             this.log.verbose("burn - delete nftd");
-            const {_id, owner_id, logic_mark, data, created_at, update_at} = nftd!;
+            const {_id, owner_id, logic_mark, data, created_at, update_at} = nft!;
             const nftT = await NftTerminatedModel.create({_id, owner_id, logic_mark, data, created_at, update_at});
             this.assert.ok(nftT, () => `burn error: create terminated nft<${op.nft_id}> failed`);
             this.log.info("deleteOne - nft_terminated created " + op.nft_id + " => " + nftT._id);
@@ -144,21 +160,17 @@ export class OpService {
 
     private async execUpdate(params: IUpdateParams, op: IOp) {
         this.log.verbose("exec update start");
+        await this.nftService.assertNftAlive(op.nft_id);
+
         try {
-            const nftd = await NftModel.findOne({_id: op.nft_id});
-            this.assert.ok(nftd, () => `update error : nft<${op.nft_id}> is not exist`);
+            const {data} = params;
 
             /** write operations
              * 1. create operation
              * 2. update nft
              */
-            const {data} = params;
-            const ret = await NftModel.findOneAndUpdate(
-                {_id: op.nft_id},
-                {
-                    $set: {data}
-                });
-            this.assert.ok(nftd, () => `update error : set nft<${op.nft_id}>'s data to ${data} failed`);
+            const nft = await NftModel.findByIdAndUpdate(op.nft_id, {$set: {data}});
+            this.assert.ok(nft, () => `update error : set nft<${op.nft_id}>'s data to ${data} failed`);
 
             return await this.commit(op);
         } catch (ex) {
@@ -166,31 +178,33 @@ export class OpService {
         }
     }
 
+
     private async execTransfer(params: ITransferParams, op: IOp) {
         this.log.verbose("exec transfer start");
+        const nft = await this.assertCanTransfer(op.nft_id, params);
+
         try {
-
-            const {from, to, memo} = params;
-            this.assert.sNotEqual(from, to, () => `transfer error : the from_account '${from}' cannot be equal to to_account '${to}'`);
-
-            const nftd = await NftModel.findOne({_id: op.nft_id});
-            this.assert.ok(nftd, () => `transfer error : nft<${op.nft_id}> is not exist`);
-            this.assert.sEqual(nftd!.owner_id, from, () => `transfer error : nft<${op.nft_id}> is not belong to ${from}, but ${nftd!.owner_id}`);
+            const {to} = params;
 
             /** write operations
              * 1. create operation
              * 2. update nft
              */
-            const ret = await NftModel.findOneAndUpdate({_id: nftd!._id}, {$set: {owner_id: to}});
+            const ret = await NftModel.findOneAndUpdate({_id: op.nft_id}, {$set: {owner_id: to}});
             this.assert.ok(ret, () => `transfer error : set nft<${op.nft_id}>'s owner to ${to} failed`);
 
             return await this.commit(op);
         }
-
         catch (ex) {
-            return await
-                this.abort(op);
+            return await this.abort(op);
         }
+    }
 
+    private async assertCanTransfer(nftId: string | ObjectID, params: ITransferParams): Promise<INft> {
+        const nft = await this.nftService.assertNftAlive(nftId);
+        const {from, to} = params;
+        this.assert.sNotEqual(from, to, () => `assert can transfer error : the from '${from}' cannot be equal to to '${to}'`);
+        this.assert.sEqual(nft.owner_id, from, () => `transfer error : nft<${nftId}> is not belong to ${from}, but ${nft.owner_id}`);
+        return nft;
     }
 }

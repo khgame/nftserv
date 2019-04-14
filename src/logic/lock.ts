@@ -4,15 +4,16 @@ import {ObjectID} from "mongodb";
 import {ILock, LockModel, LockStatus, LockTerminatedModel} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
+import {Assert, genAssert} from "./service/assert";
 
 @Service()
 export class LockService {
     static inst: LockService;
-    log: Logger;
+    private log: Logger = genLogger("s:lock");
+    private assert: Assert = genAssert("s:lock");
 
     constructor() {
         LockService.inst = this;
-        this.log = genLogger("s:lock");
         this.log.debug("Service - instance created ", LockService.inst);
     }
 
@@ -40,14 +41,19 @@ export class LockService {
         }
     }
 
-    async get(nftId: string) {
-        const lock = await LockModel.findOne({nft_id: ObjectID.createFromHexString(nftId)});
+    async get(nftId: string | ObjectID) {
+        const lock = await LockModel.findOne({nft_id: nftId instanceof ObjectID ? nftId : ObjectID.createFromHexString(nftId)});
         if (lock && lock.state === LockStatus.PREPARED && Date.now() - lock.update_at.getTime() > 5 * 60 * 1000) { // time out in 5 minutes
             await this.saveState(lock, LockStatus.TIMEOUT);
-            // set to time out and move it to trash is the only rollback operation
             return;
         }
         return lock;
+    }
+
+    async assertLock(locker: string, nftId: string | ObjectID) {
+        const lock = await this.get(nftId);
+        this.assert.ok(!lock || lock.locker === locker,
+            () => `burn error : nft<${nftId}> is locked by another locker ${lock!.locker}`);
     }
 
     async check(lockId: string) {

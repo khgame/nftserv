@@ -507,7 +507,6 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     assert.equal(res.body.result.op.creator, 'mock-server-identity');
                     assert.equal(res.body.result.op._id, burnBlob.op_id);
                     assert.equal(res.body.result.op.nft_id, burnBlob.nft_id);
-                    assert.deepEqual(res.body.result.op.params.nftd, nftd);
                     done();
                 });
         });
@@ -530,7 +529,6 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     assert.equal(res.body.result.op.creator, 'mock-server-identity');
                     assert.equal(res.body.result.op._id, burnBlob.op_id);
                     assert.equal(res.body.result.op.nft_id, burnBlob.nft_id);
-                    assert.deepEqual(res.body.result.op.params.nftd, nftd); // todo : ?
                     return done();
                 });
         });

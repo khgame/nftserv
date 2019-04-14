@@ -3,23 +3,27 @@ import {Authorized, Body, Ctx, CurrentUser, Get, Param, Post} from "routing-cont
 import {NftService} from "../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../logic/service/logger";
+import {OpCode} from "../../logic/model";
+import {OpCreatorService} from "../../logic/opCreator";
 
 const log = genLogger("api:nft");
 
 @API("/nft")
 export class NftController {
 
-    constructor(public readonly nftService: NftService) {
+    constructor(
+        public readonly nft: NftService,
+        public readonly opCreate: OpCreatorService) {
     }
 
     @Get("/list/:owner_id")
     public async list(@Param("owner_id") ownerId: string) {
-        return await this.nftService.list(ownerId);
+        return await this.nft.list(ownerId);
     }
 
     @Get("/get/:nft_id")
     public async get(@Param("nft_id") nftId: string) {
-        return await this.nftService.get(nftId);
+        return await this.nft.get(nftId);
     }
 
     @Post("/issue")
@@ -35,7 +39,8 @@ export class NftController {
         }) {
         ctx.assert.ok(sid, "invalid server id");
         // log.verbose("issue body", body);
-        return await this.nftService.issue(sid, body.op_id, body.owner_id, body.data, body.logic_mark);
+        return await this.opCreate
+            .issue(sid, body.op_id, body.owner_id, body.data, body.logic_mark);
     }
 
     @Post("/burn")
@@ -48,7 +53,8 @@ export class NftController {
             nft_id: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return this.nftService.burn(sid, body.op_id, body.nft_id); // mock todo
+        return await this.opCreate
+            .burn(sid, body.op_id, body.nft_id); // mock todo
     }
 
     @Post("/update")
@@ -62,7 +68,8 @@ export class NftController {
             data: any
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.nftService.update(sid, body.op_id, body.nft_id, body.data);
+        return await this.opCreate
+            .update(sid, body.op_id, body.nft_id, body.data);
     }
 
     @Post("/transfer")
@@ -78,20 +85,22 @@ export class NftController {
             memo: string
         }) {
         ctx.assert.ok(sid, "invalid server id");
-        return await this.nftService.transfer(sid, body.op_id, body.nft_id, body.from, body.to,  body.memo);
+        return await this.opCreate
+            .transfer(sid, body.op_id, body.nft_id, body.from, body.to, body.memo);
     }
 
-    @Post("/transaction")
-    @Authorized(["SERVICE", "GM"])
-    public async transaction(
-        @Ctx() ctx: Context,
-        @CurrentUser() {sid}: { sid: string },
-        @Body() body: {
-            actions: Array<{ op: string, args: string[] }>
-        }) {
-        ctx.assert.ok(sid, "invalid user");
-        return {
-            ok: true
-        }; // mock todo
-    }
+    //
+    // @Post("/transaction")
+    // @Authorized(["SERVICE", "GM"])
+    // public async transaction(
+    //     @Ctx() ctx: Context,
+    //     @CurrentUser() {sid}: { sid: string },
+    //     @Body() body: {
+    //         actions: Array<{ op: string, args: string[] }>
+    //     }) {
+    //     ctx.assert.ok(sid, "invalid user");
+    //     return {
+    //         ok: true
+    //     }; // mock todo
+    // }
 }
