@@ -38,7 +38,10 @@ const transferBlob = {
     to: 'the-test-receiver',
     memo: 'memo'
 };
-
+const burnBlob = {
+    op_id: `${new ObjectId()}`,
+    nft_id: "",
+};
 
 describe(`validate owner_id ${owner_id}`, async function () {
     process.env.NODE_ENV = "production";
@@ -57,7 +60,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
         loginSvr.kill();
         console.log("=> end login server mock");
         done();
-        // process.exit(0);
+        forMs(3000).then(() => process.exit(0));
     });
 
     describe("1. list & get : not exist", function () {
@@ -70,23 +73,55 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     assert.equal(res.body.result.length, 0);
                     done();
                 });
         });
 
-        it('/v1/nft/list : get by not exist id', function (done) {
+        it('/v1/nft/get : get by type-wrong id', function (done) {
             createReq().get(`/v1/nft/get/${Math.random()}`)
                 .set('Accept', 'application/json')
                 .send()
-                .expect(500)
-                .end(done);
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    let result = res.body.result;
+                    assert.equal(result, undefined);
+                    done();
+                });
+        });
+
+        it('/v1/nft/get : get by nonexistent id', function (done) {
+            createReq().get(`/v1/nft/get/${new ObjectId()}`)
+                .set('Accept', 'application/json')
+                .send()
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    let result = res.body.result;
+                    assert.equal(result, undefined);
+                    done();
+                });
         });
     });
 
     describe("2. issue", function () {
+
+        it('/v1/nft/issue : only post method', function (done) {
+            createReq().get(`/v1/nft/issue`)
+                .set('Accept', 'application/json')
+                .send({
+                    ...requestBolb,
+                    op_id: `${Math.random()}`
+                })
+                .expect(405).end(done); // forbidden
+        });
 
         it('/v1/nft/issue : issue without authorization', function (done) {
             createReq().post(`/v1/nft/issue`)
@@ -136,7 +171,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     let result = res.body.result;
                     // console.log("result", result);
@@ -148,6 +183,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     assert.deepEqual(result.op.params.data, requestBolb.data);
                     updateBlob.nft_id = result.op.nft_id;
                     transferBlob.nft_id = result.op.nft_id;
+                    burnBlob.nft_id = result.op.nft_id;
                     done();
                 });
         });
@@ -162,7 +198,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     let result = res.body.result;
                     // console.log("result", result);
@@ -189,7 +225,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     // console.log(res.body.result);
                     assert.equal(res.body.result.length, 1);
@@ -209,7 +245,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     // console.log(res.body.result);
                     assert.equal(res.body.result._id, updateBlob.nft_id);
@@ -223,7 +259,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     describe("4. update", function () {
 
-        it('/v1/nft/update : update nft without authorization', function (done) {
+        it('/v1/nft/update : only post method', function (done) {
             createReq().get(`/v1/nft/update`)
                 .set('Accept', 'application/json')
                 .send(updateBlob)
@@ -231,12 +267,20 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .end(done);
         });
 
+        it('/v1/nft/update : update nft without authorization', function (done) {
+            createReq().post(`/v1/nft/update`)
+                .set('Accept', 'application/json')
+                .send(updateBlob)
+                .expect(403)
+                .end(done);
+        });
+
         it('/v1/nft/update : update nft with wrong authorization', function (done) {
-            createReq().get(`/v1/nft/update`)
+            createReq().post(`/v1/nft/update`)
                 .set('Accept', 'application/json')
                 .send(updateBlob)
                 .set('server_id', `#`)
-                .expect(405) // method not allowed
+                .expect(403)
                 .end(done);
         });
 
@@ -249,7 +293,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     // console.log(res.body.result);
                     assert.equal(res.body.result.new, true);
@@ -270,7 +314,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     assert.equal(res.body.result.new, false);
                     assert.equal(res.body.result.op.creator, 'mock-server-identity');
@@ -280,13 +324,11 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     done();
                 });
         });
-
     });
 
-    // todo: transfer
     describe("5. transfer", function () {
 
-        it('/v1/nft/transfer : transfer nft without authorization', function (done) {
+        it('/v1/nft/transfer : only post method', function (done) {
             createReq().get(`/v1/nft/transfer`)
                 .set('Accept', 'application/json')
                 .send(transferBlob)
@@ -294,16 +336,24 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .end(done);
         });
 
-        it('/v1/nft/transfer : transfer nft with wrong authorization', function (done) {
-            createReq().get(`/v1/nft/update`)
+        it('/v1/nft/transfer : transfer nft without authorization', function (done) {
+            createReq().post(`/v1/nft/transfer`)
                 .set('Accept', 'application/json')
                 .send(transferBlob)
-                .set('server_id', `#`)
-                .expect(405) // method not allowed
+                .expect(403)
                 .end(done);
         });
 
-        it('/v1/nft/transfer : update nft with error from id', function (done) {
+        it('/v1/nft/transfer : transfer nft with wrong authorization', function (done) {
+            createReq().post(`/v1/nft/transfer`)
+                .set('Accept', 'application/json')
+                .send(transferBlob)
+                .set('server_id', `#`)
+                .expect(403) // method not allowed
+                .end(done);
+        });
+
+        it('/v1/nft/transfer : transfer nft with error from id', function (done) {
             createReq().post(`/v1/nft/transfer`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
@@ -316,7 +366,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .end(done);
         });
 
-        it('/v1/nft/transfer : update nft with correct authorization and info', function (done) {
+        it('/v1/nft/transfer : transfer nft with correct authorization and info', function (done) {
             createReq().post(`/v1/nft/transfer`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
@@ -325,7 +375,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     // console.log(res.body);
                     assert.equal(res.body.result.new, true);
@@ -350,7 +400,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     // console.log(res.body.result);
                     assert.equal(res.body.result.new, false);
@@ -368,9 +418,131 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     });
 
-    // todo: burn
 
-    // todo: check all operations
+    describe("6. burn", function () {
+
+        let nftd: any;
+
+        it('/v1/nft/get : acquire nft', function (done) {
+            createReq().get(`/v1/nft/get/${burnBlob.nft_id}`)
+                .set('Accept', 'application/json')
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    assert.equal(res.body.result._id, updateBlob.nft_id);
+                    nftd = res.body.result;
+                    done();
+                });
+        });
+
+        it('/v1/nft/burn : only post method', function (done) {
+            createReq().get(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .send(burnBlob)
+                .expect(405) // method not allowed
+                .end(done);
+        });
+
+        it('/v1/nft/burn : burn nft without authorization', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .send(burnBlob)
+                .expect(403) // forbidden
+                .end(done);
+        });
+
+        it('/v1/nft/burn : burn nft with wrong authorization', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .send(burnBlob)
+                .set('server_id', `#`)
+                .expect(403)
+                .end(done);
+        });
+
+        it('/v1/nft/burn : burn nft with error from id', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send({
+                    burnBlob,
+                    from: "wrong_user"
+                })
+                .expect('Content-Type', /json/)
+                .expect(500)
+                .end(done);
+        });
+
+        it('/v1/nft/burn : burn nft with correct authorization and info', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(burnBlob)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    // console.log(burnBlob, "\nres =>", res.body);
+                    assert.equal(res.body.result.new, true);
+                    assert.equal(res.body.result.op.op_code, OpCode.BURN);
+                    assert.equal(res.body.result.op.creator, 'mock-server-identity');
+                    assert.equal(res.body.result.op._id, burnBlob.op_id);
+                    assert.equal(res.body.result.op.nft_id, burnBlob.nft_id);
+                    assert.deepEqual(res.body.result.op.params.nftd, nftd);
+                    done();
+                });
+        });
+
+        it('/v1/nft/burn : burn with same id', function (done) {
+            createReq().post(`/v1/nft/burn`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(burnBlob)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    // console.log(res.body.result.op.params);
+                    assert.equal(res.body.result.new, false);
+                    assert.equal(res.body.result.op.op_code, OpCode.BURN);
+                    assert.equal(res.body.result.op.creator, 'mock-server-identity');
+                    assert.equal(res.body.result.op._id, burnBlob.op_id);
+                    assert.equal(res.body.result.op.nft_id, burnBlob.nft_id);
+                    assert.deepEqual(res.body.result.op.params.nftd, nftd); // todo : ?
+                    return done();
+                });
+        });
+
+        it('/v1/nft/get : nft should not exist', function (done) {
+            createReq().get(`/v1/nft/get/${burnBlob.nft_id}`)
+                .set('Accept', 'application/json')
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    assert.equal(res.body.result, undefined);
+                    done();
+                });
+        });
+
+    });
+
+    describe("7. operations", function () { // todo: check all operations
+
+
+    });
+
 
     // todo: when locked
 
