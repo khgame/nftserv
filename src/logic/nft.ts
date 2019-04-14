@@ -5,6 +5,7 @@ import {LockService} from "./lock";
 import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
+import {ObjectID} from "bson";
 
 @Service()
 export class NftService {
@@ -24,11 +25,15 @@ export class NftService {
      * @return {Promise<INft>} - the nftTerminated
      */
     private async deleteOne(nft: INft) {
-        const nftT = await NftTerminatedModel.create(nft);
+        // console.log("deleteOne", nft)
+        const {_id, owner_id, logic_mark, data, created_at, update_at} = nft;
+        const nftT = await NftTerminatedModel.create({_id, owner_id, logic_mark, data, created_at, update_at});
+        this.log.info("deleteOne - nft_terminated created " + nft._id + " => " + nftT._id);
         if (!nftT) {
             throw new Error(`deleteOne error: create terminated nft<${nft._id}> failed`);
         }
         const ret = await NftModel.deleteOne({_id: nft._id});
+        this.log.info("deleteOne - nft removed " + nft._id);
         if (!ret) {
             throw new Error(`deleteOne error: delete nft<${nft._id}> failed`);
         }
@@ -52,11 +57,18 @@ export class NftService {
      * @param {string} nftId
      * @return {Promise<any>}
      */
-    async get(nftId: string) { // todo: also get from the trash can
+    async get(nftId: string): Promise<INft | null> { // todo: also get from the trash can ?
         if (!nftId) {
             throw new Error('get nft error: nftId cannot be empty');
         }
-        return await NftModel.findOne({_id: nftId});
+        try {
+            const _id = ObjectID.createFromHexString(nftId);
+            return await NftModel.findOne({_id});
+        } catch (e) {
+            this.log.warn(`get nft<${nftId}> error: ${e}`);
+            return null;
+        }
+
     }
 
     /**
@@ -79,7 +91,11 @@ export class NftService {
         let nftd = await NftModel.create({data, logic_mark: logicMark});
 
         this.log.verbose("issue - create op"); // todo: execute mute operation according op recordes. consider about revive and abort procedure.
-        op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {data, logic_mark: logicMark, owner_id: ownerId});
+        op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {
+            data,
+            logic_mark: logicMark,
+            owner_id: ownerId
+        });
         if (!op) {
             throw new Error(`issue error : create op<${opId}> record failed`);
         }
@@ -113,24 +129,28 @@ export class NftService {
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
+        this.log.verbose("burn - check lock");
         const lock = await this.lockService.get(nftId);
         if (lock && lock.locker !== serverId) {
             await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : nft<${nftId}> is locked by another service ${lock.locker}`);
         }
 
+        this.log.verbose("burn - get nftd");
         const nftd = await this.get(nftId);
         if (!nftd) {
             await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : nft<${nftId}> is not exist`);
         }
 
+        this.log.verbose("burn - create op record");
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.BURN, {nftd});
         if (!op) {
             await redisUnlock(nftId, "NftService:burn");
             throw new Error(`burn error : create op<${opId}> record failed`);
         }
 
+        this.log.verbose("burn - delete nftd");
         const burn = await this.deleteOne(nftd);
         if (!burn) {
             await redisUnlock(nftId, "NftService:burn");

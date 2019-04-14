@@ -50,6 +50,7 @@ NftSchema.pre("save", function(next) {
     next();
 });
 
+
 export const NftModel = mongoose.model<INft>(
     "nft", NftSchema);
 export const NftTerminatedModel = mongoose.model<INft>(
