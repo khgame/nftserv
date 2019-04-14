@@ -88,8 +88,18 @@ export class NftService {
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
+        op = await this.opService.create(
+            serverId, opId, new ObjectID(), OpCode.ISSUE,
+            {
+                data,
+                logic_mark: logicMark,
+                owner_id: ownerId
+            });
+        ok(op, () => `issue error : create op<${opId}> record failed`);
+
         this.log.verbose("issue - create nftd");
         let nftd = await NftModel.create({data, logic_mark: logicMark});
+        ok(nftd, `issue error : create nftd failed`);
 
         /** write operations
          * 1. create operation
@@ -97,13 +107,7 @@ export class NftService {
          */
 
         this.log.verbose("issue - create op"); // todo: execute mute operation according op records. consider about revive and abort procedure.
-        op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {
-            data,
-            logic_mark: logicMark,
-            owner_id: ownerId
-        });
-        ok(op,
-            () => `issue error : create op<${opId}> record failed`);
+
 
         this.log.verbose("issue - set user");
         const result = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {owner_id: ownerId}});
