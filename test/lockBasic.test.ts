@@ -28,8 +28,11 @@ const voteBlob = {
 const continueBlob = {
     lock_id: "",
 };
-const releaseBlob = {
+const abortBlob = {
     lock_id: "",
+};
+const releaseBlob = {
+    nft_id: "",
 };
 
 describe(`validate owner_id ${owner_id}`, async function () {
@@ -72,6 +75,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     assert.equal(result.new, true);
                     assert.equal(result.op._id, issueBlob.op_id);
                     voteBlob.nft_id = result.op.nft_id;
+                    releaseBlob.nft_id = result._id;
                     done();
                 });
         });
@@ -138,7 +142,8 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     assert.equal(result.nft_id, voteBlob.nft_id);
                     assert.equal(result.locker, 'mock-server-identity');
                     assert.equal(result.state, LockStatus.PREPARED);
-                    continueBlob.lock_id = releaseBlob.lock_id = result._id;
+                    continueBlob.lock_id = result._id;
+                    abortBlob.lock_id = result._id;
                     done();
                 });
         });
@@ -240,16 +245,97 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     });
 
-    // todo: 4. abort
+    describe("4. abort lock", function () {
 
-    // todo: 5. execute each operation when locker state is committed
+        it('/v1/lock/abort : only post method', function (done) {
+            createReq().get(`/v1/lock/abort`)
+                .set('Accept', 'application/json')
+                .send(abortBlob)
+                .expect(405)
+                .end(done);
+        });
+
+        it('/v1/lock/abort : abort nft without authorization', function (done) {
+            createReq().post(`/v1/lock/abort`)
+                .set('Accept', 'application/json')
+                .send(abortBlob)
+                .expect(403)
+                .end(done);
+        });
+
+        it('/v1/lock/abort : abort nft with wrong authorization', function (done) {
+            createReq().post(`/v1/lock/abort`)
+                .set('Accept', 'application/json')
+                .set('server_id', `#`)
+                .send(voteBlob)
+                .expect(403)
+                .end(done);
+        });
+
+        it('/v1/lock/abort', function (done) {
+            createReq().post(`/v1/lock/abort`)
+                .set('Accept', 'application/json')
+                .set('server_id', `mock-server-identity`)
+                .send(abortBlob)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        console.log(res.body);
+                        return done(err);
+                    }
+                    let result = res.body.result;
+                    // console.log(res.body);
+                    assert.equal(result.nft_id, voteBlob.nft_id);
+                    assert.equal(result.locker, 'mock-server-identity');
+                    assert.equal(result.state, LockStatus.ABORTED);
+                    done();
+                });
+        });
+
+        it('/v1/lock/get : acquire lock of the nft - should be undefined', function (done) {
+            createReq().get(`/v1/lock/get/${voteBlob.nft_id}`)
+                .set('Accept', 'application/json')
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        console.log(res.body);
+                        return done(err);
+                    }
+                    assert.equal(res.body.result, undefined);
+                    done();
+                });
+        });
+
+        it('/v1/lock/check : acquire lock of the id - should be undefined', function (done) {
+            createReq().get(`/v1/lock/check/${continueBlob.lock_id}`)
+                .set('Accept', 'application/json')
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        console.log(res.body);
+                        return done(err);
+                    }
+                    assert.equal(res.body.result, undefined);
+                    done();
+                });
+        });
+    });
+
+    // todo: 5. execute each operation when lock aborted
 
     // todo: 6. continue
 
-    // todo: 7. execute each operation without locker
+    // todo: 7. execute each operation when locker state is committed
 
-    // todo: 7. release lock
+    // todo: 8. release lock
 
-    // todo: 8. execute each operation in unlock state
+    // todo: 9. execute each operation in unlock state
+
+    // todo: 10. check lock and lock_terminated in database
 
 });
