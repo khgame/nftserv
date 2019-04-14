@@ -17,37 +17,47 @@ export class LockService {
         this.log.debug("Service - instance created ", LockService.inst);
     }
 
-    private async saveState(lock: ILock, state: LockStatus) {
-        if (state < LockStatus.FINISHED_STATES && state - lock.state !== 1) {
-            throw new Error(`lockEntity setState error: cannot set state from ${lock.state} to state`);
-        }
-        lock.state = state;
+    private async saveState(lock: ILock, state: LockStatus): Promise<ILock> {
+        this.assert.ok(lock,
+            () => `setState error : the parameter 'lock' must be given`);
+        this.assert.ok(state < LockStatus.FINISHED_STATES && state - lock.state !== 1,
+            () => `setState error : cannot set state from ${lock.state} to state`);
+
         if (lock.state < LockStatus.FINISHED_STATES) {
-            const ret = await LockTerminatedModel.updateOne({_id: lock._id}, {state});
-            if (!ret) {
-                throw new Error(`saveState error : lock<${lock._id}> status update failed`);
-            }
+            const ret = await LockModel.findOneAndUpdate({_id: lock._id}, {state});
+            this.log.info(`update lock status of lock ${lock._id}:${lock.state} => ${ret}:${state}`);
+            this.assert.ok(ret, () => `saveState error : lock<${lock._id}> status update failed`);
+            return ret!;
         } else {
             const {_id, nft_id, locker, created_at, update_at} = lock;
             const lockT = await LockTerminatedModel.create({_id, nft_id, locker, state, created_at, update_at});
-            if (!lockT) {
-                throw new Error(`saveState error : terminated lock<${lock._id}> create failed`);
-            }
-            const ret = await LockModel.deleteOne({_id: lock._id});
-            if (!ret) {
-                throw new Error(`saveState error : delete lock<${lock._id}> failed`);
-            }
+            this.assert.ok(lockT, () => `saveState error : terminated lock<${lock._id}> create failed`);
+
+            const ret = await LockModel.findByIdAndDelete({_id: lock._id});
+            this.assert.ok(ret, () => `saveState error : delete lock<${lock._id}> failed`);
             return lockT;
         }
     }
 
+    private async tryTimeout(lock: ILock) {
+        const now = Date.now();
+        const lockTime = lock.update_at.getTime();
+        if (lock.state !== LockStatus.PREPARED || now - lockTime < 5 * 60 * 1000) {
+            return lock;
+        }
+
+        // time out in 5 minutes
+        const createTime = lock.created_at.getTime();
+        this.log.info(`timeout - lock<${lock.nft_id}> created by ${lock.locker} at ${createTime} are timeout at ${now} > lockTime<${lockTime}> + 300,000ms`);
+        return await this.saveState(lock, LockStatus.TIMEOUT);
+    }
+
     async get(nftId: string | ObjectID) {
         const lock = await LockModel.findOne({nft_id: nftId instanceof ObjectID ? nftId : ObjectID.createFromHexString(nftId)});
-        if (lock && lock.state === LockStatus.PREPARED && Date.now() - lock.update_at.getTime() > 5 * 60 * 1000) { // time out in 5 minutes
-            await this.saveState(lock, LockStatus.TIMEOUT);
+        if (!lock) {
             return;
         }
-        return lock;
+        return await this.tryTimeout(lock);
     }
 
     async assertLock(locker: string, nftId: string | ObjectID) {
@@ -57,7 +67,11 @@ export class LockService {
     }
 
     async check(lockId: string) {
-        return await LockModel.findOne({_id: lockId}); // to doCommit, the RM should check that the lock's stated is COMMITTED
+        const lock = await LockModel.findOne({_id: lockId}); // to doCommit, the RM should check that the lock's stated is COMMITTED
+        if (!lock) {
+            return;
+        }
+        return await this.tryTimeout(lock);
     }
 
     private async getPreparedLock(lockId: string, serverId: string) {
@@ -88,12 +102,16 @@ export class LockService {
         }
 
         // lock and set prepared
-        lock = await LockModel.create({nft_id: ObjectID.createFromHexString(nftId), locker: serverId});
-        const ret = await this.saveState(lock, LockStatus.PREPARED);
+        lock = await LockModel.create({
+            nft_id: ObjectID.createFromHexString(nftId),
+            locker: serverId,
+            state: LockStatus.PREPARED
+        });
+        // const ret = await this.saveState(lock, LockStatus.PREPARED);
 
         // remove mutex
         await redisUnlock(nftId, "LockService:vote");
-        return ret;
+        return lock;
     }
 
     async continue(lockId: string, serverId: string) { // logic are prepared
