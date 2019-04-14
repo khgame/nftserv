@@ -27,7 +27,8 @@ export class LockService {
                 throw new Error(`saveState error : lock<${lock._id}> status update failed`);
             }
         } else {
-            const lockT = await LockTerminatedModel.create(lock);
+            const {_id, nft_id, locker, created_at, update_at} = lock;
+            const lockT = await LockTerminatedModel.create({_id, nft_id, locker, state, created_at, update_at});
             if (!lockT) {
                 throw new Error(`saveState error : terminated lock<${lock._id}> create failed`);
             }
