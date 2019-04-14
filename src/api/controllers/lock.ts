@@ -79,9 +79,21 @@ export class LockController {
         return await this.lockService.continue(body.lock_id, sid);
     }
 
-    @Post("/release")
+    @Post("/abort")
     @Authorized(["SERVICE", "GM"])
     public async abort(
+        @Ctx() ctx: Context,
+        @CurrentUser() {sid}: { sid: string },
+        @Body() body: {
+            lock_id: string
+        }) {
+        ctx.assert.ok(sid, "invalid server id");
+        return await this.lockService.abort(body.lock_id, sid);
+    }
+
+    @Post("/release")
+    @Authorized(["SERVICE", "GM"])
+    public async release(
         @Ctx() ctx: Context,
         @CurrentUser() {sid}: { sid: string },
         @Body() body: {

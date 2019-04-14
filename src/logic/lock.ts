@@ -20,21 +20,23 @@ export class LockService {
     private async saveState(lock: ILock, state: LockStatus): Promise<ILock> {
         this.assert.ok(lock,
             () => `setState error : the parameter 'lock' must be given`);
-        this.assert.ok(state < LockStatus.FINISHED_STATES && state - lock.state !== 1,
-            () => `setState error : cannot set state from ${lock.state} to state`);
+        this.assert.ok(state > LockStatus.FINISHED_STATES || state - lock.state === 1,
+            () => `setState error : cannot set state from ${lock.state} to ${state}`);
 
-        if (lock.state < LockStatus.FINISHED_STATES) {
-            const ret = await LockModel.findOneAndUpdate({_id: lock._id}, {state});
-            this.log.info(`update lock status of lock ${lock._id}:${lock.state} => ${ret}:${state}`);
-            this.assert.ok(ret, () => `saveState error : lock<${lock._id}> status update failed`);
+        if (state < LockStatus.FINISHED_STATES) {
+            const result = await LockModel.updateOne({_id: lock._id}, {state});
+            this.log.info(`update lock status of lock ${lock._id}: ${lock.state} => ${state}`);
+            this.assert.sEqual(result.nModified, 1, () => `saveState error : lock<${lock._id}> status update failed`);
+            let ret = await LockModel.findById(lock._id);
+            this.assert.ok(ret, `setState fatal: cannot find the updated result of lock<${lock._id}>, that should be ${lock}`);
             return ret!;
         } else {
             const {_id, nft_id, locker, created_at, update_at} = lock;
             const lockT = await LockTerminatedModel.create({_id, nft_id, locker, state, created_at, update_at});
             this.assert.ok(lockT, () => `saveState error : terminated lock<${lock._id}> create failed`);
 
-            const ret = await LockModel.findByIdAndDelete({_id: lock._id});
-            this.assert.ok(ret, () => `saveState error : delete lock<${lock._id}> failed`);
+            const result = await LockModel.findByIdAndDelete({_id: lock._id});
+            this.assert.ok(result, () => `saveState error : delete lock<${lock._id}> failed`);
             return lockT;
         }
     }
@@ -80,7 +82,7 @@ export class LockService {
             throw new Error(`getPreparedLock error : lock<${lockId}> are not exist`);
         }
         if (lock.state !== LockStatus.PREPARED) {
-            throw new Error(`getPreparedLock error : lock<lockId> error, expect PREPARED(${LockStatus.PREPARED}), got ${lock.state}`);
+            throw new Error(`getPreparedLock error : lock<${lockId}> error, expect PREPARED(${LockStatus.PREPARED}), got ${lock.state}`);
         }
         if (lock.locker !== serverId) { // check if the nft are locked by the given service
             throw new Error(`getPreparedLock error : lock<${lockId}>.locker error, expect ${serverId}, got ${lock.locker}`);

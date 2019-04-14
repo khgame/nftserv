@@ -47,7 +47,7 @@ export interface ILock extends Document {
 const LockSchema = new Schema({
     nft_id: {type: ObjectID, required: true},
     locker: {type: String, required: true, default: ""},
-    state: {type: String, required: true, default: LockStatus.INITIALED},
+    state: {type: LockStatus, required: true, default: LockStatus.INITIALED},
     created_at: {type: Date}, // 买单生成时间
     update_at: {type: Date}, // 买单生成时间
 });
