@@ -6,6 +6,7 @@ import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
+import {ok, sEqual, sNotEqual} from "./service/assert";
 
 @Service()
 export class NftService {
@@ -29,14 +30,10 @@ export class NftService {
         const {_id, owner_id, logic_mark, data, created_at, update_at} = nft;
         const nftT = await NftTerminatedModel.create({_id, owner_id, logic_mark, data, created_at, update_at});
         this.log.info("deleteOne - nft_terminated created " + nft._id + " => " + nftT._id);
-        if (!nftT) {
-            throw new Error(`deleteOne error: create terminated nft<${nft._id}> failed`);
-        }
+        ok(nftT, () => `deleteOne error: create terminated nft<${nft._id}> failed`);
         const ret = await NftModel.deleteOne({_id: nft._id});
         this.log.info("deleteOne - nft removed " + nft._id);
-        if (!ret) {
-            throw new Error(`deleteOne error: delete nft<${nft._id}> failed`);
-        }
+        ok(ret, () => `deleteOne error: delete nft<${nft._id}> failed`);
         return nftT;
     }
 
@@ -47,9 +44,15 @@ export class NftService {
      * @return {Promise<module:mongoose.DocumentQuery<INft[], INft> & {}>}
      */
     async list(ownerId: string, logicMark: string = "") {
-        return logicMark ?
-            NftModel.find({logic_mark: logicMark, owner_id: ownerId}) :
-            NftModel.find({owner_id: ownerId});
+        ok(ownerId, 'get nft error: ownerId cannot be empty');
+        try {
+            return logicMark ?
+                NftModel.find({logic_mark: logicMark, owner_id: ownerId}) :
+                NftModel.find({owner_id: ownerId});
+        } catch (e) {
+            this.log.warn(`get list nfts of owner<${ownerId}> error: ${e}`);
+            return null;
+        }
     }
 
     /**
@@ -58,9 +61,7 @@ export class NftService {
      * @return {Promise<any>}
      */
     async get(nftId: string): Promise<INft | null> { // todo: also get from the trash can ?
-        if (!nftId) {
-            throw new Error('get nft error: nftId cannot be empty');
-        }
+        ok(nftId, 'get nft error: nftId cannot be empty');
         try {
             const _id = ObjectID.createFromHexString(nftId);
             return await NftModel.findOne({_id});
@@ -90,21 +91,24 @@ export class NftService {
         this.log.verbose("issue - create nftd");
         let nftd = await NftModel.create({data, logic_mark: logicMark});
 
-        this.log.verbose("issue - create op"); // todo: execute mute operation according op recordes. consider about revive and abort procedure.
+        /** write operations
+         * 1. create operation
+         * 2. create nft
+         */
+
+        this.log.verbose("issue - create op"); // todo: execute mute operation according op records. consider about revive and abort procedure.
         op = await this.opService.create(serverId, opId, nftd.id, OpCode.ISSUE, {
             data,
             logic_mark: logicMark,
             owner_id: ownerId
         });
-        if (!op) {
-            throw new Error(`issue error : create op<${opId}> record failed`);
-        }
+        ok(op,
+            () => `issue error : create op<${opId}> record failed`);
 
         this.log.verbose("issue - set user");
         const result = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {owner_id: ownerId}});
-        if (!result) {
-            throw new Error(`issue error : set owner_id<${ownerId}> to nft<${nftd._id}> failed`);
-        }
+        ok(result,
+            () => `issue error : set owner_id<${ownerId}> to nft<${nftd._id}> failed`);
 
         this.log.verbose("issue - success");
         return {new: true, op};
@@ -123,92 +127,46 @@ export class NftService {
             throw new Error(`burn error : get mutex of nft<${nftId}> failed`);
         }
 
-        let op = await this.opService.get(opId);
-        if (op) {
+        try {
+            let op = await this.opService.get(opId);
+            if (op) {
+                await redisUnlock(nftId, "NftService:burn");
+                return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
+            }
+
+            this.log.verbose("burn - check lock");
+            const lock = await this.lockService.get(nftId);
+            ok(!lock || lock.locker === serverId,
+                () => `burn error : nft<${nftId}> is locked by another service ${lock!.locker}`);
+
+            this.log.verbose("burn - get nftd");
+            const nftd = await this.get(nftId);
+            ok(nftd,
+                () => `burn error : nft<${nftId}> is not exist`);
+
+            /** write operations
+             * 1. create operation
+             * 2. delete nft
+             *  1. create nftT
+             *  2. remove nft
+             */
+
+            this.log.verbose("burn - create op record");
+            op = await this.opService.create(serverId, opId, nftd!.id, OpCode.BURN, {nftd});
+            ok(op,
+                () => `burn error : create op<${opId}> record failed`);
+
+            this.log.verbose("burn - delete nftd");
+            const burn = await this.deleteOne(nftd!);
+            ok(burn,
+                () => `burn error : burn nft<${nftId}> failed`);
+
             await redisUnlock(nftId, "NftService:burn");
-            return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
-        }
-
-        this.log.verbose("burn - check lock");
-        const lock = await this.lockService.get(nftId);
-        if (lock && lock.locker !== serverId) {
+            return {new: true, op};
+        } catch (ex) {
             await redisUnlock(nftId, "NftService:burn");
-            throw new Error(`burn error : nft<${nftId}> is locked by another service ${lock.locker}`);
+            throw ex;
         }
-
-        this.log.verbose("burn - get nftd");
-        const nftd = await this.get(nftId);
-        if (!nftd) {
-            await redisUnlock(nftId, "NftService:burn");
-            throw new Error(`burn error : nft<${nftId}> is not exist`);
-        }
-
-        this.log.verbose("burn - create op record");
-        op = await this.opService.create(serverId, opId, nftd.id, OpCode.BURN, {nftd});
-        if (!op) {
-            await redisUnlock(nftId, "NftService:burn");
-            throw new Error(`burn error : create op<${opId}> record failed`);
-        }
-
-        this.log.verbose("burn - delete nftd");
-        const burn = await this.deleteOne(nftd);
-        if (!burn) {
-            await redisUnlock(nftId, "NftService:burn");
-            throw new Error(`burn error : burn nft<${nftId}> failed`);
-        }
-
-        await redisUnlock(nftId, "NftService:burn");
-        return {new: true, op};
-    }
-
-    async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
-        const mutex = await redisLock(nftId, "NftService:transfer");
-        if (!mutex) {
-            throw new Error(`transfer error : get mutex of nft<${nftId}> failed`);
-        }
-
-        let op = await this.opService.get(opId);
-        if (op) {
-            await redisUnlock(nftId, "NftService:transfer");
-            return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
-        }
-
-        if (from === to) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : the from_account ${from} cannot be equal to to_account${to}`);
-        }
-
-        const lock = await this.lockService.get(nftId);
-        if (lock && lock.locker !== serverId) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : nft<${nftId}> is locked by another service ${lock.locker}`);
-        }
-
-        const nftd = await this.get(nftId);
-        if (!nftd) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : nft<${nftId}> is not exist`);
-        }
-
-        if (nftd.owner_id !== from) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : nft<${nftId}> is not belong to ${from}, but ${nftd.owner_id}`);
-        }
-
-        op = await this.opService.create(serverId, opId, nftd.id, OpCode.TRANSFER, {from, to, memo});
-        if (!op) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : create op<${opId}> record failed`);
-        }
-
-        const setResult = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {owner_id: to}});
-        if (!setResult) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw new Error(`transfer error : set nft<${nftId}>'s owner to ${to} failed`);
-        }
-
-        await redisUnlock(nftId, "NftService:transfer");
-        return {new: true, op};
     }
 
     async update(serverId: string, opId: string, nftId: string, data: any) {
@@ -217,37 +175,87 @@ export class NftService {
             throw new Error(`update error : get mutex of nft<${nftId}> failed`);
         }
 
-        let op = await this.opService.get(opId);
-        if (op) {
-            await redisUnlock(nftId, "NftService:update");
-            return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
-        }
+        try {
+            let op = await this.opService.get(opId);
+            if (op) {
+                await redisUnlock(nftId, "NftService:update");
+                return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
+            }
 
-        const lock = await this.lockService.get(nftId);
-        if (lock && lock.locker !== serverId) {
-            await redisUnlock(nftId, "NftService:update");
-            throw new Error(`update error : nft<${nftId}> is locked by another service ${lock.locker}`);
-        }
+            const lock = await this.lockService.get(nftId);
+            ok(!lock || lock.locker === serverId,
+                () => `update error : nft<${nftId}> is locked by another service ${lock!.locker}`);
 
-        const nftd = await this.get(nftId);
-        if (!nftd) {
-            await redisUnlock(nftId, "NftService:update");
-            throw new Error(`update error : nft<${nftId}> is not exist`);
-        }
+            const nftd = await this.get(nftId);
+            ok(nftd,
+                () => `update error : nft<${nftId}> is not exist`);
 
-        op = await this.opService.create(serverId, opId, nftd.id, OpCode.UPDATE, {data});
-        if (!op) {
-            await redisUnlock(nftId, "NftService:update");
-            throw new Error(`update error : create op<${opId}> record failed`);
-        }
+            /** write operations
+             * 1. create operation
+             * 2. update nft
+             */
 
-        const setResult = await NftModel.findOneAndUpdate({_id: nftd._id}, {$set: {data}});
-        if (!setResult) {
-            await redisUnlock(nftId, "NftService:update");
-            throw new Error(`update error : set nft<${nftId}>'s data to ${data} failed`);
-        }
+            op = await this.opService.create(serverId, opId, nftd!.id, OpCode.UPDATE, {data});
+            ok(op,
+                () => `update error : create op<${opId}> record failed`);
 
-        await redisUnlock(nftId, "NftService:update");
-        return {new: true, op};
+            const setResult = await NftModel.findOneAndUpdate({_id: nftd!._id}, {$set: {data}});
+            ok(setResult,
+                () => `update error : set nft<${nftId}>'s data to ${data} failed`);
+
+            await redisUnlock(nftId, "NftService:update");
+            return {new: true, op};
+        } catch (ex) {
+            await redisUnlock(nftId, "NftService:update");
+            throw ex;
+        }
     }
+
+    async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
+        const mutex = await redisLock(nftId, "NftService:transfer");
+        if (!mutex) {
+            throw new Error(`transfer error : get mutex of nft<${nftId}> failed`);
+        }
+
+        try {
+            let op = await this.opService.get(opId);
+            if (op) {
+                await redisUnlock(nftId, "NftService:transfer");
+                return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
+            }
+
+            sNotEqual(from, to,
+                () => `transfer error : the from_account '${from}' cannot be equal to to_account '${to}'`);
+
+            const lock = await this.lockService.get(nftId);
+            ok(!lock || lock.locker === serverId,
+                () => `transfer error : nft<${nftId}> is locked by another service ${lock!.locker}`);
+
+            const nftd = await this.get(nftId);
+            ok(nftd,
+                () => `transfer error : nft<${nftId}> is not exist`);
+
+            sEqual(nftd!.owner_id, from,
+                () => `transfer error : nft<${nftId}> is not belong to ${from}, but ${nftd!.owner_id}`);
+
+            /** write operations
+             * 1. create operation
+             * 2. update nft
+             */
+            op = await this.opService.create(serverId, opId, nftd!.id, OpCode.TRANSFER, {from, to, memo});
+            ok(op,
+                () => `transfer error : create op<${opId}> record failed`);
+
+            const setResult = await NftModel.findOneAndUpdate({_id: nftd!._id}, {$set: {owner_id: to}});
+            ok(setResult,
+                () => `transfer error : set nft<${nftId}>'s owner to ${to} failed`);
+
+            await redisUnlock(nftId, "NftService:transfer");
+            return {new: true, op};
+        } catch (ex) {
+            await redisUnlock(nftId, "NftService:transfer");
+            throw ex;
+        }
+    }
+
 }
