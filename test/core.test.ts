@@ -178,7 +178,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                         return done(err);
                     }
                     let result = res.body.result;
-                    // console.log("result", result);
+                    console.log("result", result);
                     assert.equal(result.new, true);
                     assert.equal(result.op._id, requestBolb.op_id);
                     assert.equal(result.op.op_code, OpCode.ISSUE);

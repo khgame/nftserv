@@ -80,6 +80,7 @@ const OpSchema = new Schema({
     nft_id: {type: ObjectID, required: true},
     creator: {type: String, required: true},
     op_code: {type: OpCode, required: true, default: OpCode.NONE},
+    state: {type: OpStatus, required: true, default: OpStatus.INITIALED},
     params: {type: Object, default: {}}, // 买单生成时间
     created_at: {type: Date}, // 买单生成时间
 });
