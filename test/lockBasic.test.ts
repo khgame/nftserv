@@ -184,7 +184,12 @@ describe(`validate owner_id ${owner_id}`, async function () {
     });
 
 
+    // todo: 3. execute each operation without the correct locker
 
-    // todo: when locked
+    // todo: 4. execute each operation without the correct locker
+
+    // todo: 5. release lock
+
+    // todo: 6. execute each operation in unlock state
 
 });

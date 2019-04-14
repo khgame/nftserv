@@ -16,7 +16,7 @@ import {forMs} from "kht";
  */
 
 const owner_id = `${Math.random()}`;
-const requestBolb = {
+const issueBlob = {
     op_id: `${new ObjectId()}`,
     owner_id,
     data: {"test": 1},
@@ -119,7 +119,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
             createReq().get(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .send({
-                    ...requestBolb,
+                    ...issueBlob,
                     op_id: `${Math.random()}`
                 })
                 .expect(405).end(done); // forbidden
@@ -129,7 +129,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
             createReq().post(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .send({
-                    ...requestBolb,
+                    ...issueBlob,
                     op_id: `${Math.random()}`
                 })
                 .expect('Content-Type', /json/)
@@ -141,7 +141,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .set('Accept', 'application/json')
                 .set('server_id', `#`)
                 .send({
-                    ...requestBolb,
+                    ...issueBlob,
                     op_id: `${Math.random()}`
                 })
                 .expect('Content-Type', /json/)
@@ -167,7 +167,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
             createReq().post(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
-                .send(requestBolb)
+                .send(issueBlob)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end(function (err, res) {
@@ -178,11 +178,11 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     let result = res.body.result;
                     // console.log("result", result);
                     assert.equal(result.new, true);
-                    assert.equal(result.op._id, requestBolb.op_id);
+                    assert.equal(result.op._id, issueBlob.op_id);
                     assert.equal(result.op.op_code, OpCode.ISSUE);
-                    assert.equal(result.op.params.owner_id, requestBolb.owner_id);
-                    assert.equal(result.op.params.logic_mark, requestBolb.logic_mark);
-                    assert.deepEqual(result.op.params.data, requestBolb.data);
+                    assert.equal(result.op.params.owner_id, issueBlob.owner_id);
+                    assert.equal(result.op.params.logic_mark, issueBlob.logic_mark);
+                    assert.deepEqual(result.op.params.data, issueBlob.data);
                     updateBlob.nft_id = result.op.nft_id;
                     transferBlob.nft_id = result.op.nft_id;
                     burnBlob.nft_id = result.op.nft_id;
@@ -195,7 +195,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
             createReq().post(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
-                .send(requestBolb)
+                .send(issueBlob)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end(function (err, res) {
@@ -207,11 +207,11 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     // console.log("result", result);
                     assert.equal(result.new, false);
                     assert.equal(result.op.creator, 'mock-server-identity');
-                    assert.equal(result.op._id, requestBolb.op_id);
+                    assert.equal(result.op._id, issueBlob.op_id);
                     assert.equal(result.op.op_code, OpCode.ISSUE);
-                    assert.equal(result.op.params.owner_id, requestBolb.owner_id);
-                    assert.equal(result.op.params.logic_mark, requestBolb.logic_mark);
-                    assert.deepEqual(result.op.params.data, requestBolb.data);
+                    assert.equal(result.op.params.owner_id, issueBlob.owner_id);
+                    assert.equal(result.op.params.logic_mark, issueBlob.logic_mark);
+                    assert.deepEqual(result.op.params.data, issueBlob.data);
                     updateBlob.nft_id = result.op.nft_id;
                     done();
                 });
@@ -235,9 +235,9 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     // console.log(res.body.result);
                     assert.equal(res.body.result.length, 1);
                     assert.equal(res.body.result[0]._id, updateBlob.nft_id);
-                    assert.equal(res.body.result[0].owner_id, requestBolb.owner_id);
-                    assert.equal(res.body.result[0].logic_mark, requestBolb.logic_mark);
-                    assert.deepEqual(res.body.result[0].data, requestBolb.data);
+                    assert.equal(res.body.result[0].owner_id, issueBlob.owner_id);
+                    assert.equal(res.body.result[0].logic_mark, issueBlob.logic_mark);
+                    assert.deepEqual(res.body.result[0].data, issueBlob.data);
                     done();
                 });
         });
@@ -255,9 +255,9 @@ describe(`validate owner_id ${owner_id}`, async function () {
                     }
                     // console.log(res.body.result);
                     assert.equal(res.body.result._id, updateBlob.nft_id);
-                    assert.equal(res.body.result.owner_id, requestBolb.owner_id);
-                    assert.equal(res.body.result.logic_mark, requestBolb.logic_mark);
-                    assert.deepEqual(res.body.result.data, requestBolb.data);
+                    assert.equal(res.body.result.owner_id, issueBlob.owner_id);
+                    assert.equal(res.body.result.logic_mark, issueBlob.logic_mark);
+                    assert.deepEqual(res.body.result.data, issueBlob.data);
                     done();
                 });
         });
@@ -366,7 +366,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
                 .send({
-                    transferBlob,
+                    ...transferBlob,
                     from: "wrong_user"
                 })
                 .expect('Content-Type', /json/)
@@ -469,8 +469,8 @@ describe(`validate owner_id ${owner_id}`, async function () {
         it('/v1/nft/burn : burn nft with wrong authorization', function (done) {
             createReq().post(`/v1/nft/burn`)
                 .set('Accept', 'application/json')
-                .send(burnBlob)
                 .set('server_id', `#`)
+                .send(burnBlob)
                 .expect(403)
                 .end(done);
         });
@@ -480,8 +480,8 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
                 .send({
-                    burnBlob,
-                    from: "wrong_user"
+                    ...burnBlob,
+                    nft_id: "wrong_id"
                 })
                 .expect('Content-Type', /json/)
                 .expect(500)
