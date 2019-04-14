@@ -25,7 +25,7 @@ export class Assert {
         } else {
             msgStr = (msg as Error).message;
         }
-        this.log.error(msgStr);
+        this.log.warning(msgStr);
         throw msg;
     }
 

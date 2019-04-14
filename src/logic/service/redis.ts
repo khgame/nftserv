@@ -20,6 +20,9 @@ export const redisLock =
               lockerIdentity: string,
               bWaitForLock: boolean = true,
               lockTime: number = 5000) => {
+        if (!key) {
+            throw new Error(`redisLock error : lock key cannot be empty`);
+        }
         redisLockCount[key] = redisLockCount[key] ? redisLockCount[key] + 1 : 0;
         if (redisLockCount[key] >= 100) {
             throw new Error(`redisLock error : too much(${redisLockCount[key]}) wait for key<${key}>`);

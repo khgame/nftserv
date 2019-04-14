@@ -3,11 +3,11 @@ import {Document, Schema} from "mongoose";
 import {ObjectID} from "bson";
 
 export enum OpCode {
-    NONE,
-    ISSUE,
-    BURN,
-    UPDATE,
-    TRANSFER,
+    NONE = 0,
+    ISSUE = 1,
+    BURN = 2,
+    UPDATE = 3,
+    TRANSFER = 4,
 }
 
 export enum OpStatus {

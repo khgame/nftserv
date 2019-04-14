@@ -241,7 +241,7 @@ export class OpService {
         const nft = await this.nftService.assertNftAlive(nftId);
         const {from, to} = params;
         this.assert.sNotEqual(from, to, () => `assert can transfer error : the from '${from}' cannot be equal to to '${to}'`);
-        this.assert.sEqual(nft.owner_id, from, () => `transfer error : nft<${nftId}> is not belong to ${from}, but ${nft.owner_id}`);
+        this.assert.sEqual(nft.owner_id, from, () => `transfer error : nft<${nftId}> is not belong to '${from}', but '${nft.owner_id}'`);
         return nft;
     }
 }
