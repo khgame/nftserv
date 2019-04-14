@@ -60,7 +60,6 @@ describe(`validate owner_id ${owner_id}`, async function () {
         loginSvr.kill();
         console.log("=> end login server mock");
         done();
-        forMs(3000).then(() => process.exit(0));
     });
 
     describe("1. list & get : not exist", function () {
@@ -165,12 +164,11 @@ describe(`validate owner_id ${owner_id}`, async function () {
         });
 
         it('/v1/nft/issue : satisfied nft ', function (done) {
-            // console.log("data", data);
             createReq().post(`/v1/nft/issue`)
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
                 .send(requestBolb)
-                // .expect('Content-Type', /json/)
+                .expect('Content-Type', /json/)
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
@@ -178,7 +176,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                         return done(err);
                     }
                     let result = res.body.result;
-                    console.log("result", result);
+                    // console.log("result", result);
                     assert.equal(result.new, true);
                     assert.equal(result.op._id, requestBolb.op_id);
                     assert.equal(result.op.op_code, OpCode.ISSUE);
@@ -198,7 +196,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .set('Accept', 'application/json')
                 .set('server_id', `mock-server-identity`)
                 .send(requestBolb)
-                // .expect('Content-Type', /json/)
+                .expect('Content-Type', /json/)
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
@@ -286,8 +284,8 @@ describe(`validate owner_id ${owner_id}`, async function () {
         it('/v1/nft/update : update nft with wrong authorization', function (done) {
             createReq().post(`/v1/nft/update`)
                 .set('Accept', 'application/json')
-                .send(updateBlob)
                 .set('server_id', `#`)
+                .send(updateBlob)
                 .expect(403)
                 .end(done);
         });
@@ -357,8 +355,8 @@ describe(`validate owner_id ${owner_id}`, async function () {
         it('/v1/nft/transfer : transfer nft with wrong authorization', function (done) {
             createReq().post(`/v1/nft/transfer`)
                 .set('Accept', 'application/json')
-                .send(transferBlob)
                 .set('server_id', `#`)
+                .send(transferBlob)
                 .expect(403) // method not allowed
                 .end(done);
         });
