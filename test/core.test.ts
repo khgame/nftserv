@@ -44,7 +44,7 @@ const burnBlob = {
 };
 
 describe(`validate owner_id ${owner_id}`, async function () {
-    process.env.NODE_ENV = "development";
+    process.env.NODE_ENV = "production";
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     let loginSvr: ChildProcess;
 
