@@ -44,7 +44,7 @@ const burnBlob = {
 };
 
 describe(`validate owner_id ${owner_id}`, async function () {
-    process.env.NODE_ENV = "production";
+    process.env.NODE_ENV = "development";
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     let loginSvr: ChildProcess;
 
@@ -73,6 +73,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     assert.equal(res.body.result.length, 0);
@@ -87,6 +88,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     let result = res.body.result;
@@ -102,6 +104,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     let result = res.body.result;
@@ -171,6 +174,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     let result = res.body.result;
@@ -198,6 +202,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     let result = res.body.result;
@@ -225,6 +230,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body.result);
@@ -245,6 +251,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body.result);
@@ -293,6 +300,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body.result);
@@ -314,6 +322,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     assert.equal(res.body.result.new, false);
@@ -375,6 +384,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body);
@@ -400,6 +410,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body.result);
@@ -431,6 +442,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     assert.equal(res.body.result._id, updateBlob.nft_id);
@@ -486,6 +498,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(burnBlob, "\nres =>", res.body);
@@ -508,6 +521,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     // console.log(res.body.result.op.params);
@@ -529,6 +543,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 .expect(200)
                 .end(function (err, res) {
                     if (err) {
+                        console.log(res.body);
                         return done(err);
                     }
                     assert.equal(res.body.result, undefined);
