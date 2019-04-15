@@ -96,24 +96,24 @@ export class LockService {
         if (!lockResult) {
             throw new Error(`vote error : get mutex of nft<${nftId}> failed`);
         }
+        try {
+            // check if its already locked
+            let lock = await this.get(nftId);
+            this.assert.ok(!lock, () => `vote error : nft<${nftId}> are already locked by ${lock!.locker}`);
 
-        // check if its already locked
-        let lock = await this.get(nftId);
-        if (lock) {
-            throw new Error(`vote error : nft<${nftId}> are already locked by server ${lock.locker}`);
+            // lock and set prepared
+            lock = await LockModel.create({
+                nft_id: ObjectID.createFromHexString(nftId),
+                locker: serverId,
+                state: LockStatus.PREPARED
+            });
+
+            await redisUnlock(nftId, "LockService:vote");
+            return lock;
+        }catch (ex) {
+            await redisUnlock(nftId, "LockService:vote");
+            throw ex;
         }
-
-        // lock and set prepared
-        lock = await LockModel.create({
-            nft_id: ObjectID.createFromHexString(nftId),
-            locker: serverId,
-            state: LockStatus.PREPARED
-        });
-        // const ret = await this.saveState(lock, LockStatus.PREPARED);
-
-        // remove mutex
-        await redisUnlock(nftId, "LockService:vote");
-        return lock;
     }
 
     async continue(lockId: string, serverId: string) { // logic are prepared
@@ -133,13 +133,11 @@ export class LockService {
             return "ok";
         }
 
-        if (lock.state !== LockStatus.COMMITTED) { // check if the nft are locked by the given service
-            throw new Error(`unlock error : nft<${nftId}> state error, expect COMMITTED(${LockStatus.COMMITTED}), got ${lock.state}`);
-        }
+        this.assert.sEqual(lock.state, LockStatus.COMMITTED,
+            () => `unlock error : nft<${nftId}> state error, expect COMMITTED(${LockStatus.COMMITTED}), got ${lock.state}`);
 
-        if (lock.locker !== serverId) { // check if the nft are locked by the given service
-            throw new Error(`unlock error : nft<${nftId}> are not locked by another service, expect ${serverId}, got ${lock.locker}`);
-        }
+        this.assert.sEqual(lock.locker, serverId,
+            () => `unlock error : nft<${nftId}> are not locked by another service, expect ${serverId}, got ${lock.locker}`);
 
         return await this.saveState(lock, LockStatus.RELEASED);
     }
