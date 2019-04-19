@@ -65,7 +65,7 @@ export class LockService {
     async assertLock(locker: string, nftId: string | ObjectID) {
         const lock = await this.get(nftId);
         this.assert.ok(!lock || lock.locker === locker,
-            () => `burn error : nft<${nftId}> is locked by another locker ${lock!.locker}`);
+            () => `error : nft<${nftId}> is locked by another locker ${lock!.locker}`);
     }
 
     async check(lockId: string) {

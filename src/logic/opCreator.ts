@@ -95,10 +95,11 @@ export class OpCreatorService {
         }
     }
 
+    // @mutexMethod()
     async update(serverId: string, opId: string, nftId: string, data: any) {
-        this.assert.ok(serverId, "burn error: parameter serverId must be given");
-        this.assert.ok(opId, "burn error: parameter opId must be given");
-        this.assert.ok(nftId, "burn error: parameter nftId must be given");
+        this.assert.ok(serverId, "update error: parameter serverId must be given");
+        this.assert.ok(opId, "update error: parameter opId must be given");
+        this.assert.ok(nftId, "update error: parameter nftId must be given");
 
         const mutex = await redisLock(nftId, "NftService:update");
         if (!mutex) {
@@ -112,7 +113,6 @@ export class OpCreatorService {
         }
 
         try {
-
             op = await this.opService.create(serverId, opId, nftId, OpCode.UPDATE, {data});
             this.assert.ok(op, () => `update error : create op<${opId}> record`);
 
@@ -128,11 +128,11 @@ export class OpCreatorService {
     }
 
     async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
-        this.assert.ok(serverId, "burn error: parameter serverId must be given");
-        this.assert.ok(opId, "burn error: parameter opId must be given");
-        this.assert.ok(nftId, "burn error: parameter nftId must be given");
-        this.assert.ok(from, "burn error: parameter from must be given");
-        this.assert.ok(to, "burn error: parameter to must be given");
+        this.assert.ok(serverId, "transfer error: parameter serverId must be given");
+        this.assert.ok(opId, "transfer error: parameter opId must be given");
+        this.assert.ok(nftId, "transfer error: parameter nftId must be given");
+        this.assert.ok(from, "transfer error: parameter from must be given");
+        this.assert.ok(to, "transfer error: parameter to must be given");
 
         const mutex = await redisLock(nftId, "NftService:transfer");
         if (!mutex) {

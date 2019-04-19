@@ -1,7 +1,4 @@
 import {Service} from "typedi";
-import {redisLock, redisUnlock} from "./service/redis";
-import {OpService} from "./op";
-import {LockService} from "./lock";
 import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
@@ -70,7 +67,6 @@ export class NftService {
         }
     }
 
-
     async assertNftDoNotExist(nftId: string| ObjectID): Promise<INft>{
         const nft = await NftModel.findOne({_id: nftId});
         this.assert.ok(!nft, () => `assert nft error : nft is already exist<${nftId}>`);
@@ -84,5 +80,6 @@ export class NftService {
         this.assert.ok(nft, () => `assert nft error : cannot find nft<${nftId}>`);
         return nft!;
     }
+
 
 }

@@ -72,17 +72,17 @@ export class OpService {
                 this.assert.ok(params as IIssueParams, `op create error: params should be IIssueParams`);
                 break;
             case OpCode.BURN:
-                await this.lockService.assertLock(creator, opId);
+                await this.lockService.assertLock(creator, nftId);
                 await this.nftService.assertNftAlive(nftId);
                 this.assert.ok(params as IBurnParams, `op create error: params should be IBurnParams`);
                 break;
             case OpCode.UPDATE:
-                await this.lockService.assertLock(creator, opId);
+                await this.lockService.assertLock(creator, nftId);
                 await this.nftService.assertNftAlive(nftId);
                 this.assert.ok(params as IUpdateParams, `op create error: params should be IUpdateParams`);
                 break;
             case OpCode.TRANSFER:
-                await this.lockService.assertLock(creator, opId);
+                await this.lockService.assertLock(creator, nftId);
                 await this.nftService.assertNftAlive(nftId);
                 await this.assertCanTransfer(nftId, params as ITransferParams);
                 this.assert.ok(params as ITransferParams, `op create error: params should be ITransferParams`);
