@@ -4,10 +4,10 @@ import {Global} from "../src/global";
 
 import {spawn, exec, ChildProcess} from 'child_process';
 
-import {createReq} from './createReq';
-import {initServices} from "../src/logic/service";
+import {createReq, itGet, itPost} from './createReq';
+import {initServices, waitForLoginSvrAlive} from "../src/logic/service";
 import {ObjectId} from "bson";
-import {LockStatus, OpCode} from "../src/logic/model";
+import {LockStatus, OpCode, OpStatus} from "../src/logic/model";
 import {forMs} from "kht";
 
 
@@ -35,19 +35,40 @@ const releaseBlob = {
     nft_id: "",
 };
 
+const updateBlob = {
+    op_id: `${new ObjectId()}`,
+    nft_id: "",
+    data: {
+        name: "poko",
+        level: 3,
+        category: "cat"
+    }
+};
+const transferBlob = {
+    op_id: `${new ObjectId()}`,
+    nft_id: "",
+    from: owner_id,
+    to: 'the-test-receiver',
+    memo: 'memo'
+};
+const burnBlob = {
+    op_id: `${new ObjectId()}`,
+    nft_id: "",
+};
+
 describe(`validate owner_id ${owner_id}`, async function () {
     process.env.NODE_ENV = "production";
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     let loginSvr: ChildProcess;
 
-    before(async () => {
+    before(async function () {
+        this.timeout(10000);
         await initServices();
         console.log("=> start login server mock");
         loginSvr = exec("npx kh-loginsvr start -m", function (err) {
             console.log('child exit code (exec)', err!.code);
         });
-        await forMs(1000);
-        console.log("=> start test");
+        await waitForLoginSvrAlive();
     });
 
     after((done) => {
@@ -58,272 +79,174 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     describe("1. no lock has been set", function () {
 
-        it('/v1/nft/issue : satisfied nft ', function (done) {
-            // console.log("data", data);
-            createReq().post(`/v1/nft/issue`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(issueBlob)
-                // .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    let result = res.body.result;
-                    assert.equal(result.new, true);
-                    assert.equal(result.op._id, issueBlob.op_id);
-                    voteBlob.nft_id = result.op.nft_id;
-                    releaseBlob.nft_id = result._id;
-                    done();
-                });
-        });
+        itPost("satisfied nft", '/v1/nft/issue',
+            {'server_id': `mock-server-identity`},
+            issueBlob,
+            req => req.expect(200),
+            (body) => {
+                let result = body.result;
+                assert.equal(result.new, true);
+                assert.equal(result.op._id, issueBlob.op_id);
+                voteBlob.nft_id = result.op.nft_id;
+                releaseBlob.nft_id = result.op.nft_id;
+                updateBlob.nft_id = result.op.nft_id;
+                transferBlob.nft_id = result.op.nft_id;
+                burnBlob.nft_id = result.op.nft_id;
+                console.log("nft id set :", voteBlob.nft_id);
+            }
+        );
 
-        it('/v1/lock/get : acquire lock of nft', function (done) {
-            createReq().get(`/v1/lock/get/${voteBlob.nft_id}`)
-                .set('Accept', 'application/json')
-                .send({})
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    assert.equal(res.body.result, undefined);
-                    done();
-                });
-        });
-
+        itGet('acquire lock of nft', () => `/v1/lock/get/${voteBlob.nft_id}`, {},
+            req => req.expect(200),
+            body => assert.equal(body.result, undefined)
+        );
     });
 
     describe("2. vote lock", function () {
 
-        it('/v1/lock/vote : only post method', function (done) {
-            createReq().get(`/v1/lock/vote`)
-                .set('Accept', 'application/json')
-                .send(voteBlob)
-                .expect(405)
-                .end(done);
-        });
+        itGet('only post method', '/v1/lock/vote', {server_id: `mock-server-identity`},
+            req => req.expect(405));
 
-        it('/v1/lock/vote : vote nft without authorization', function (done) {
-            createReq().post(`/v1/lock/vote`)
-                .set('Accept', 'application/json')
-                .send(voteBlob)
-                .expect(403)
-                .end(done);
-        });
+        itPost('vote nft without authorization', '/v1/lock/vote', {}, voteBlob,
+            req => req.expect(403));
 
-        it('/v1/lock/vote : vote nft with wrong authorization', function (done) {
-            createReq().post(`/v1/lock/vote`)
-                .set('Accept', 'application/json')
-                .set('server_id', `#`)
-                .send(voteBlob)
-                .expect(403)
-                .end(done);
-        });
+        itPost('vote nft with wrong authorization', '/v1/lock/vote', {'server_id': `#`}, voteBlob,
+            req => req.expect(403));
 
-        it('/v1/lock/vote', function (done) {
-            createReq().post(`/v1/lock/vote`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(voteBlob)
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    let result = res.body.result;
-                    // console.log(res.body);
-                    assert.equal(result.nft_id, voteBlob.nft_id);
-                    assert.equal(result.locker, 'mock-server-identity');
-                    assert.equal(result.state, LockStatus.PREPARED);
-                    continueBlob.lock_id = result._id;
-                    abortBlob.lock_id = result._id;
-                    done();
-                });
-        });
-
-        it('/v1/lock/get : acquire lock of nft', function (done) {
-            createReq().get(`/v1/lock/get/${voteBlob.nft_id}`)
-                .set('Accept', 'application/json')
-                .send({})
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    // console.log(res.body);
-                    let result = res.body.result;
-                    assert.equal(result.nft_id, voteBlob.nft_id);
-                    assert.equal(result.locker, 'mock-server-identity');
-                    assert.equal(result.state, LockStatus.PREPARED);
-                    done();
-                });
-        });
-
-        it('/v1/lock/check : acquire lock by lock_id', function (done) {
-            createReq().get(`/v1/lock/check/${continueBlob.lock_id}`)
-                .set('Accept', 'application/json')
-                .send({})
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    // console.log(res.body);
-                    let result = res.body.result;
-                    assert.equal(result.nft_id, voteBlob.nft_id);
-                    assert.equal(result.locker, 'mock-server-identity');
-                    assert.equal(result.state, LockStatus.PREPARED);
-                    done();
-                });
-        });
-
-    });
+        itPost('correct vote', '/v1/lock/vote', {server_id: `mock-server-identity`}, voteBlob,
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => {
+                let result = body.result;
+                // console.log("voteBlob", voteBlob); // res.body);
+                assert.equal(result.nft_id, voteBlob.nft_id);
+                assert.equal(result.locker, 'mock-server-identity');
+                assert.equal(result.state, LockStatus.PREPARED);
+                continueBlob.lock_id = result._id;
+                abortBlob.lock_id = result._id;
+            });
 
 
-    describe("3. execute each operation when locker state is prepared", function () {
-        const updateBlob = {
-            op_id: `${new ObjectId()}`,
-            nft_id: voteBlob.nft_id,
-            data: {
-                name: "poko",
-                level: 3,
-                category: "cat"
+        itGet('acquire lock of nft', () => `/v1/lock/get/${voteBlob.nft_id}`, {},
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => {
+                let result = body.result;
+                assert.equal(result.nft_id, voteBlob.nft_id);
+                assert.equal(result.locker, 'mock-server-identity');
+                assert.equal(result.state, LockStatus.PREPARED);
+            });
+
+        itGet('acquire lock by lock_id', () => `/v1/lock/check/${continueBlob.lock_id}`, {},
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => {
+                let result = body.result;
+                assert.equal(result.nft_id, voteBlob.nft_id);
+                assert.equal(result.locker, 'mock-server-identity');
+                assert.equal(result.state, LockStatus.PREPARED);
             }
-        };
-        const transferBlob = {
-            op_id: `${new ObjectId()}`,
-            nft_id: voteBlob.nft_id,
-            from: owner_id,
-            to: 'the-test-receiver',
-            memo: 'memo'
-        };
-        const burnBlob = {
-            op_id: `${new ObjectId()}`,
-            nft_id: voteBlob.nft_id,
-        };
-
-        it('/v1/nft/update : update nft when lock PREPARED', function (done) {
-            createReq().post(`/v1/nft/update`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(updateBlob)
-                .expect('Content-Type', /json/)
-                .expect(500)
-                .end(done);
-        });
-
-        it('/v1/nft/transfer : transfer nft when lock PREPARED', function (done) {
-            createReq().post(`/v1/nft/transfer`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(transferBlob)
-                .expect('Content-Type', /json/)
-                .expect(500)
-                .end(done);
-        });
-
-        it('/v1/nft/burn : burn nft when lock PREPARED', function (done) {
-            createReq().post(`/v1/nft/burn`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(burnBlob)
-                .expect('Content-Type', /json/)
-                .expect(500)
-                .end(done);
-        });
+        );
 
     });
 
-    describe("4. abort lock", function () {
+    describe("3. execute each operation when the nft are locked by others ", function () {
 
-        it('/v1/lock/abort : only post method', function (done) {
-            createReq().get(`/v1/lock/abort`)
-                .set('Accept', 'application/json')
-                .send(abortBlob)
-                .expect(405)
-                .end(done);
-        });
+        itGet('acquire lock of nft',
+            () => `/v1/lock/get/${voteBlob.nft_id}`,
+            {},
+            req => req.expect('Content-Type', /json/).expect(200),
+            function (body) {
+                let result = body.result;
+                assert.equal(result.nft_id, voteBlob.nft_id);
+                assert.equal(result.locker, 'mock-server-identity');
+                assert.equal(result.state, LockStatus.PREPARED);
+            }
+        );
 
-        it('/v1/lock/abort : abort nft without authorization', function (done) {
-            createReq().post(`/v1/lock/abort`)
-                .set('Accept', 'application/json')
-                .send(abortBlob)
-                .expect(403)
-                .end(done);
-        });
+        itPost('update nft when the nft are locked by others', `/v1/nft/update`,
+            {server_id: `mock-server-identity-1`}, updateBlob, // {...updateBlob, op_id: `${new ObjectId()}`},
+            req => req.expect('Content-Type', /json/).expect(500));
 
-        it('/v1/lock/abort : abort nft with wrong authorization', function (done) {
-            createReq().post(`/v1/lock/abort`)
-                .set('Accept', 'application/json')
-                .set('server_id', `#`)
-                .send(voteBlob)
-                .expect(403)
-                .end(done);
-        });
+        itPost('transfer nft when the nft are locked by others', '/v1/nft/transfer',
+            {server_id: `mock-server-identity-1`}, transferBlob,
+            req => req.expect('Content-Type', /json/).expect(500));
 
-        it('/v1/lock/abort', function (done) {
-            createReq().post(`/v1/lock/abort`)
-                .set('Accept', 'application/json')
-                .set('server_id', `mock-server-identity`)
-                .send(abortBlob)
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    let result = res.body.result;
-                    // console.log(res.body);
-                    assert.equal(result.nft_id, voteBlob.nft_id);
-                    assert.equal(result.locker, 'mock-server-identity');
-                    assert.equal(result.state, LockStatus.ABORTED);
-                    done();
-                });
-        });
+        itPost('burn nft when the nft are locked by others', '/v1/nft/burn',
+            {server_id: `mock-server-identity-1`}, burnBlob,
+            req => req.expect('Content-Type', /json/).expect(500));
+    });
 
-        it('/v1/lock/get : acquire lock of the nft - should be undefined', function (done) {
-            createReq().get(`/v1/lock/get/${voteBlob.nft_id}`)
-                .set('Accept', 'application/json')
-                .send({})
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    assert.equal(res.body.result, undefined);
-                    done();
-                });
-        });
 
-        it('/v1/lock/check : acquire lock of the id - should be undefined', function (done) {
-            createReq().get(`/v1/lock/check/${continueBlob.lock_id}`)
-                .set('Accept', 'application/json')
-                .send({})
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        console.log(res.body);
-                        return done(err);
-                    }
-                    assert.equal(res.body.result, undefined);
-                    done();
-                });
-        });
+    describe("4. execute each operation when locker state is prepared", function () {
+
+        itPost('update nft when locker state is prepared', `/v1/nft/update`,
+            {server_id: `mock-server-identity`}, updateBlob, // {...updateBlob, op_id: `${new ObjectId()}`},
+            req => req.expect('Content-Type', /json/).expect('Content-Type', /json/).expect(200),
+            body => {
+                const result = body.result;
+                assert.equal(result.new, true);
+                assert.equal(result.op.op_code, OpCode.UPDATE);
+                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.nft_id, updateBlob.nft_id);
+            });
+
+        itPost('transfer nft when locker state is prepared', '/v1/nft/transfer',
+            {server_id: `mock-server-identity`}, transferBlob,
+            req => req.expect('Content-Type', /json/).expect('Content-Type', /json/).expect(200),
+            body => {
+                const result = body.result;
+                assert.equal(result.new, true);
+                assert.equal(result.op.op_code, OpCode.TRANSFER);
+                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.params.to, transferBlob.to);
+                assert.equal(result.op.nft_id, transferBlob.nft_id);
+            });
+
+        itPost('burn nft when locker state is prepared', '/v1/nft/burn',
+            {server_id: `mock-server-identity`}, burnBlob,
+            req => req.expect('Content-Type', /json/).expect('Content-Type', /json/).expect(200),
+            body => {
+                const result = body.result;
+                assert.equal(result.new, true);
+                assert.equal(result.op.op_code, OpCode.BURN);
+                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.nft_id, burnBlob.nft_id);
+            });
+
+    });
+
+    describe("5. abort lock", function () {
+
+        itGet('only post method', '/v1/lock/abort',
+            {server_id: `mock-server-identity`},
+            req => req.expect(405));
+
+        itPost('abort op without authorization', '/v1/lock/abort',
+            {}, abortBlob,
+            req => req.expect(403));
+
+
+        itPost('abort op with wrong authorization', '/v1/lock/abort',
+            {server_id: `#`}, abortBlob,
+            req => req.expect(403));
+
+
+        itPost('correct abort', '/v1/lock/abort',
+            {server_id: `mock-server-identity`}, abortBlob,
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => {
+                const result = body.result;
+                assert.equal(result.nft_id, voteBlob.nft_id);
+                assert.equal(result.locker, 'mock-server-identity');
+                assert.equal(result.state, LockStatus.ABORTED);
+            });
+
+        itGet('should be disable to get lock of nft', () => `/v1/lock/get/${voteBlob.nft_id}`, {},
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => assert.equal(body.result, undefined));
+
+        itGet('should be disable to get lock by lock_id', () => `/v1/lock/check/${abortBlob.lock_id}`, {},
+            req => req.expect('Content-Type', /json/).expect(200),
+            body => assert.equal(body.result, undefined));
+
     });
 
     // todo: 5. execute each operation when lock aborted

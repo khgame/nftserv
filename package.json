@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.test.ts --exit",
+    "test:lock": "mocha -r ts-node/register test/lockBasic.test.ts --exit",
     "build": "npx tsc && cp ./src/conf.default.json dist",
     "app": "npx ts-node ./src/app",
     "lint": "npx tslint --fix --project .",

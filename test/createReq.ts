@@ -11,14 +11,20 @@ export function createReq() {
 export function itPost(desc: string,
                        url: string | (() => string),
                        header: any = {},
-                       data: any = {},
+                       data: any | (() => any) = {},
                        expect: (req: Test) => any,
                        validate?: (body: any) => any) {
-    it(desc + " : POST[" + url + "]", done => {
+    it(desc + " : POST[" + url + "]",  function(done) {
         const urlFinal = typeof url === 'string' ? url : url();
-        if (typeof url !== 'string') {
-            console.log(chalk.gray("\t■ POST url :"), chalk.blue(urlFinal));
+        if (data instanceof Function) {
+            data = data();
         }
+
+        console.log(
+            chalk.gray("\t■ POST url :"),
+            chalk.blue(urlFinal),
+            Object.keys(data).reduce((p, k) => `${p}  ${chalk.cyan(k)}<${chalk.yellow(data[k])}>`, ''));
+
         let req = createReq().post(urlFinal).set('Accept', 'application/json');
         for (const key in header) {
             if (!header.hasOwnProperty(key)) {
@@ -26,6 +32,7 @@ export function itPost(desc: string,
             }
             req = req.set(key, header[key]);
         }
+
         req = req.send(data);
         expect(req);
         req.end(function (err, res) {
@@ -39,7 +46,6 @@ export function itPost(desc: string,
             }
             done();
         });
-        return;
     });
 }
 
@@ -51,9 +57,8 @@ export function itGet(desc: string,
                       validate?: (body: any) => any) {
     it(`${desc} : GET[${url}]`, done => {
         const urlFinal = typeof url === 'string' ? url : url();
-        if (typeof url !== 'string') {
-            console.log(chalk.gray("\t◆ GET url :"), chalk.blue(urlFinal));
-        }
+        console.log(chalk.gray("\t◆ GET url :"), chalk.blue(urlFinal));
+
         let req = createReq().get(urlFinal).set('Accept', 'application/json');
         for (const key in header) {
             if (!header.hasOwnProperty(key)) {

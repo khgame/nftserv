@@ -5,7 +5,7 @@ import {Global} from "../src/global";
 import {spawn, exec, ChildProcess} from 'child_process';
 
 import {createReq} from './createReq';
-import {initServices} from "../src/logic/service";
+import {initServices, waitForLoginSvrAlive} from "../src/logic/service";
 import {ObjectId} from "bson";
 import {OpCode} from "../src/logic/model";
 import {forMs} from "kht";
@@ -48,14 +48,14 @@ describe(`validate owner_id ${owner_id}`, async function () {
     Global.setConf(Path.resolve(__dirname, `../src/conf.default.json`), false);
     let loginSvr: ChildProcess;
 
-    before(async () => {
+    before(async function() {
+        this.timeout(10000)
         await initServices();
         console.log("=> start login server mock");
         loginSvr = exec("npx kh-loginsvr start -m", function (err) {
             console.log('child exit code (exec)', err!.code);
         });
-        await forMs(1000);
-        console.log("=> start test");
+        await waitForLoginSvrAlive();
     });
 
     after((done) => {
