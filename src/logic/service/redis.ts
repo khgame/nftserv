@@ -1,6 +1,6 @@
 import {Global} from "../../global";
 import * as IORedis from "ioredis";
-import {forMs} from "kht/lib";
+import {forMs} from "kht";
 
 let redisInstance: IORedis.Redis;
 export const redis = () => {

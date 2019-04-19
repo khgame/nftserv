@@ -1,5 +1,5 @@
 {
-  "name": "nftserv",
+  "name": "@khgame/nftserv",
   "version": "0.1.0",
   "description": "nft service",
   "main": "index.js",

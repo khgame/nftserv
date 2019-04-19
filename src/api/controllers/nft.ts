@@ -3,7 +3,6 @@ import {Authorized, Body, Ctx, CurrentUser, Get, Param, Post} from "routing-cont
 import {NftService} from "../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../logic/service/logger";
-import {OpCode} from "../../logic/model";
 import {OpCreatorService} from "../../logic/opCreator";
 
 const log = genLogger("api:nft");

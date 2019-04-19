@@ -557,7 +557,6 @@ describe(`validate owner_id ${owner_id}`, async function () {
 
     });
 
-
-    // todo: when locked
+    // todo: create at and update at
 
 });
