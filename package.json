@@ -48,8 +48,9 @@
     "winston-daily-rotate-file": "^3.8.0"
   },
   "devDependencies": {
-    "@khgame/loginsvr": "^0.1.0",
+    "@khgame/loginsvr": "^0.1.1",
     "@types/chai": "^4.1.7",
+    "@types/chalk": "^2.2.0",
     "@types/kcors": "^2.2.3",
     "@types/koa": "^2.0.48",
     "@types/koa-bodyparser": "^4.2.2",
@@ -59,6 +60,7 @@
     "@types/mongoose": "^5.3.26",
     "@types/supertest": "^2.0.7",
     "chai": "^4.2.0",
+    "chalk": "^2.4.2",
     "cross-env": "^5.2.0",
     "mocha": "^6.1.2",
     "nodemon": "^1.18.10",
