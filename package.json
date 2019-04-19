@@ -34,7 +34,7 @@
     "fs-extra": "^7.0.1",
     "ioredis": "^4.9.0",
     "kcors": "^2.2.2",
-    "kht": "^0.0.8",
+    "kht": "^0.0.9",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-logger": "^3.2.0",
@@ -48,7 +48,7 @@
     "winston-daily-rotate-file": "^3.8.0"
   },
   "devDependencies": {
-    "@khgame/loginsvr": "^0.1.1",
+    "@khgame/loginsvr": "^0.1.2",
     "@types/chai": "^4.1.7",
     "@types/chalk": "^2.2.0",
     "@types/kcors": "^2.2.3",

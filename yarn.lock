@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.13.2"
 
-"@khgame/loginsvr@^0.1.1":
-  version "0.1.1"
-  resolved "http://registry.npm.taobao.org/@khgame/loginsvr/download/@khgame/loginsvr-0.1.1.tgz#5c31f59b3fa87aa5194b82cef70766aac4d305a1"
-  integrity sha1-XDH1mz+oeqUZS4LO9wdmqsTTBaE=
+"@khgame/loginsvr@^0.1.2":
+  version "0.1.2"
+  resolved "http://registry.npm.taobao.org/@khgame/loginsvr/download/@khgame/loginsvr-0.1.2.tgz#005ea5f8705427c52956541cca548139d90891c2"
+  integrity sha1-AF6l+HBUJ8UpVlQcylSBOdkIkcI=
   dependencies:
     axios "^0.18.0"
     fs-extra "^7.0.1"
@@ -1882,17 +1882,6 @@ keygrip@~1.0.3:
   version "1.0.3"
   resolved "http://registry.npm.taobao.org/keygrip/download/keygrip-1.0.3.tgz#399d709f0aed2bab0a059e0cdd3a5023a053e1dc"
   integrity sha1-OZ1wnwrtK6sKBZ4M3TpQI6BT4dw=
-
-kht@^0.0.8:
-  version "0.0.8"
-  resolved "http://registry.npm.taobao.org/kht/download/kht-0.0.8.tgz#7d5a2feb9f436723dc79d0ab5fe15001d92f0a3d"
-  integrity sha1-fVov659DZyPcedCrX+FQAdkvCj0=
-  dependencies:
-    "@babel/runtime" "^7.3.1"
-    child_process "^1.0.2"
-    fs-extra "^7.0.1"
-    path "^0.12.7"
-    readline "^1.3.0"
 
 kht@^0.0.9:
   version "0.0.9"

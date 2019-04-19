@@ -23,7 +23,8 @@
       "root" : "/v1",
       "api" : {
         "online_state": "/session/online_state",
-        "game_svr_list": "/game_svr/list"
+        "game_svr_list": "/game_svr/list",
+        "info": "/core/info"
       }
     }
   },

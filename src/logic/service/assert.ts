@@ -16,14 +16,14 @@ export class Assert {
             return;
         }
         let msgStr: string = '';
-        if (msg as StringMethod) {
+        if (typeof msg === 'string'){
+            msgStr = msg;
+            msg = new Error(msgStr);
+        } else if (msg instanceof Error) {
+            msgStr = (msg as Error).message;
+        } else{
             msgStr = (msg as StringMethod)();
             msg = new Error(msgStr);
-        } else if (msg as string) {
-            msgStr = msg as string;
-            msg = new Error(msgStr);
-        } else {
-            msgStr = (msg as Error).message;
         }
         this.log.warn(msgStr);
         throw msg;
