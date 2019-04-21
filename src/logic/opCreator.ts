@@ -1,5 +1,4 @@
 import {Service} from "typedi";
-import {redisLock, redisUnlock} from "./service/redis";
 import {OpService} from "./op";
 import {LockService} from "./lock";
 import {OpCode} from "./model";
@@ -7,6 +6,7 @@ import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
 import {Assert, genAssert} from "./service/assert";
+import {nftMutex} from "./core/mutex";
 
 @Service()
 export class OpCreatorService {
@@ -19,7 +19,6 @@ export class OpCreatorService {
         OpCreatorService.inst = this;
         this.log.debug("Service - instance created ", OpCreatorService.inst);
     }
-
 
     /**
      * issue an nft to a user
@@ -63,70 +62,44 @@ export class OpCreatorService {
      * @param {string} nftId - nft id
      * @return {Promise<any>} - ret.new is true, when this operation are succeed, hence the ret.op is the operation record
      */
+    @nftMutex(2)
     async burn(serverId: string, opId: string, nftId: string) {
         this.assert.ok(serverId, "burn error: parameter serverId must be given");
         this.assert.ok(opId, "burn error: parameter opId must be given");
         this.assert.ok(nftId, "burn error: parameter nftId must be given");
 
-        const mutex = await redisLock(nftId, "NftService:burn");
-        if (!mutex) {
-            throw new Error(`burn error : get mutex of nft<${nftId}> failed`);
-        }
-
         let op = await this.opService.get(opId);
         if (op) {
-            await redisUnlock(nftId, "NftService:burn");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
-        try {
-            this.log.verbose(`burn - create op ${opId}`);
-            op = await this.opService.create(serverId, opId, nftId, OpCode.BURN, {});
-            this.assert.ok(op, () => `burn error : create op<${opId}> failed`);
+        this.log.verbose(`burn - create op ${opId}`);
+        op = await this.opService.create(serverId, opId, nftId, OpCode.BURN, {});
+        this.assert.ok(op, () => `burn error : create op<${opId}> failed`);
 
-            this.log.verbose("burn - exec op");
-            op = await this.opService.exec(op._id);
-
-            await redisUnlock(nftId, "NftService:burn");
-            return {new: true, op};
-        } catch (ex) {
-            await redisUnlock(nftId, "NftService:burn");
-            throw ex;
-        }
+        this.log.verbose("burn - exec op");
+        return {new: true, op: await this.opService.exec(op._id)};
     }
 
-    // @mutexMethod()
+    @nftMutex(2)
     async update(serverId: string, opId: string, nftId: string, data: any) {
         this.assert.ok(serverId, "update error: parameter serverId must be given");
         this.assert.ok(opId, "update error: parameter opId must be given");
         this.assert.ok(nftId, "update error: parameter nftId must be given");
 
-        const mutex = await redisLock(nftId, "NftService:update");
-        if (!mutex) {
-            throw new Error(`update error : get mutex of nft<${nftId}> failed`);
-        }
-
         let op = await this.opService.get(opId);
         if (op) {
-            await redisUnlock(nftId, "NftService:update");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
-        try {
-            op = await this.opService.create(serverId, opId, nftId, OpCode.UPDATE, {data});
-            this.assert.ok(op, () => `update error : create op<${opId}> record`);
+        op = await this.opService.create(serverId, opId, nftId, OpCode.UPDATE, {data});
+        this.assert.ok(op, () => `update error : create op<${opId}> record`);
 
-            this.log.verbose("update - exec op");
-            op = await this.opService.exec(op._id);
-
-            await redisUnlock(nftId, "NftService:update");
-            return {new: true, op};
-        } catch (ex) {
-            await redisUnlock(nftId, "NftService:update");
-            throw ex;
-        }
+        this.log.verbose("update - exec op");
+        return {new: true, op: await this.opService.exec(op._id)};
     }
 
+    @nftMutex(2)
     async transfer(serverId: string, opId: string, nftId: string, from: string, to: string, memo: string) {
         this.assert.ok(serverId, "transfer error: parameter serverId must be given");
         this.assert.ok(opId, "transfer error: parameter opId must be given");
@@ -134,31 +107,16 @@ export class OpCreatorService {
         this.assert.ok(from, "transfer error: parameter from must be given");
         this.assert.ok(to, "transfer error: parameter to must be given");
 
-        const mutex = await redisLock(nftId, "NftService:transfer");
-        if (!mutex) {
-            throw new Error(`transfer error : get mutex of nft<${nftId}> failed`);
-        }
-
         let op = await this.opService.get(opId);
         if (op) {
-            await redisUnlock(nftId, "NftService:transfer");
             return {new: false, op, time_offset_ms: Date.now() - op.created_at.getTime()};
         }
 
-        try {
+        op = await this.opService.create(serverId, opId, nftId, OpCode.TRANSFER, {from, to, memo});
+        this.assert.ok(op, () => `transfer error : create op<${opId}> failed`);
 
-            op = await this.opService.create(serverId, opId, nftId, OpCode.TRANSFER, {from, to, memo});
-            this.assert.ok(op, () => `transfer error : create op<${opId}> failed`);
-
-            this.log.verbose("transfer - exec op");
-            op = await this.opService.exec(op._id);
-
-            await redisUnlock(nftId, "NftService:transfer");
-            return {new: true, op};
-        } catch (ex) {
-            await redisUnlock(nftId, "NftService:transfer");
-            throw ex;
-        }
+        this.log.verbose("transfer - exec op");
+        return {new: true, op: await this.opService.exec(op._id)};
     }
 
 }
