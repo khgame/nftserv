@@ -8,12 +8,16 @@ export enum OpCode {
     BURN = 2,
     UPDATE = 3,
     TRANSFER = 4,
+    HOLD = 5,
+    RELEASE = 6,
 }
 
 export enum OpStatus {
     INITIALED = 0,
-    SUCCESS = 2,
-    FAILED = 3
+    PREPARED = 1,
+    COMMITTED = 2,
+    ABORTED = 11,
+    TIMEOUT = 12,
 }
 
 export interface IIssueParams {
@@ -37,11 +41,6 @@ export interface ITransferParams {
 }
 
 export interface IOp extends Document {
-
-    /**
-     * the op_id, should be a single String of 24 hex character
-     */
-    _id: string;
 
     /**
      * nft id
@@ -76,7 +75,6 @@ export interface IOp extends Document {
 }
 
 const OpSchema = new Schema({
-    _id: {type: String, required: true},
     nft_id: {type: ObjectID, required: true},
     creator: {type: String, required: true},
     op_code: {type: OpCode, required: true, default: OpCode.NONE},

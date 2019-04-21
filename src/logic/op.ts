@@ -49,8 +49,8 @@ export class OpService {
         this.log.debug("Service - instance created ", OpService.inst);
     } // todo: sharding
 
-    async get(opId: string): Promise<IOp | null> {
-        if (!opId || opId.length !== 24) {
+    async get(opId: string | ObjectID): Promise<IOp | null> {
+        if (!(opId instanceof ObjectID) && (!opId || opId.length !== 24)) {
             throw new Error(`get op error: opId<${opId}> must be a single String of 24 hex character`);
         }
         return await OpModel.findOne({_id: opId});
@@ -100,7 +100,7 @@ export class OpService {
         });
     }
 
-    async exec(opId: string) {
+    async exec(opId: string | ObjectID) {
         let op = await this.get(opId);
         this.assert.ok(op, () => `exec error : create op<${opId}> record failed`);
 
@@ -120,7 +120,7 @@ export class OpService {
 
     private async commit(op: IOp) {
         this.log.verbose("commit - " + op._id);
-        let result = await OpModel.updateOne({_id: op._id}, {state: OpStatus.SUCCESS});
+        let result = await OpModel.updateOne({_id: op._id}, {state: OpStatus.COMMITTED});
         this.log.verbose("commit - update result " + JSON.stringify(result));
         this.assert.sEqual(result.nModified, 1, () => `op commit error: wrong nModified in result, expect 1, got ${result.nModified}`);
 
@@ -129,7 +129,7 @@ export class OpService {
 
     private async abort(op: IOp) {
         this.log.verbose("abort - " + op._id);
-        return await OpModel.updateOne({_id: op._id}, {state: OpStatus.FAILED});
+        return await OpModel.updateOne({_id: op._id}, {state: OpStatus.ABORTED});
     }
 
     private async execIssue(params: IIssueParams, op: IOp) {

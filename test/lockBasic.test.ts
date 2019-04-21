@@ -184,7 +184,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 const result = body.result;
                 assert.equal(result.new, true);
                 assert.equal(result.op.op_code, OpCode.UPDATE);
-                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.state, OpStatus.COMMITTED);
                 assert.equal(result.op.nft_id, updateBlob.nft_id);
             });
 
@@ -195,7 +195,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 const result = body.result;
                 assert.equal(result.new, true);
                 assert.equal(result.op.op_code, OpCode.TRANSFER);
-                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.state, OpStatus.COMMITTED);
                 assert.equal(result.op.params.to, transferBlob.to);
                 assert.equal(result.op.nft_id, transferBlob.nft_id);
             });
@@ -207,7 +207,7 @@ describe(`validate owner_id ${owner_id}`, async function () {
                 const result = body.result;
                 assert.equal(result.new, true);
                 assert.equal(result.op.op_code, OpCode.BURN);
-                assert.equal(result.op.state, OpStatus.SUCCESS);
+                assert.equal(result.op.state, OpStatus.COMMITTED);
                 assert.equal(result.op.nft_id, burnBlob.nft_id);
             });
 
