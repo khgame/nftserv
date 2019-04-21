@@ -1,6 +1,5 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
-import {NftService} from "../../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../../logic/service/logger";
 import {ITransferParams, OpTransfer} from "../../../logic/operation";
@@ -10,9 +9,7 @@ export class NftTransferController {
 
     log = genLogger("api:nft:transfer");
 
-    constructor(
-        public readonly nft: NftService,
-        public readonly opTransfer: OpTransfer) {
+    constructor(public readonly opTransfer: OpTransfer) {
     }
 
     @Post("/prepare")

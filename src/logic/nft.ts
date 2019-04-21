@@ -16,23 +16,6 @@ export class NftService {
         this.log.debug("Service - instance created ", NftService.inst);
     }
 
-    // /**
-    //  * delete one - create nftTerminated and delete nft
-    //  * @param {INft} nft - the nft instance to delete
-    //  * @return {Promise<INft>} - the nftTerminated
-    //  */
-    // private async deleteOne(nft: INft) {
-    //     // console.log("deleteOne", nft)
-    //     const {_id, owner_id, logic_mark, data, created_at, update_at} = nft;
-    //     const nftT = await NftTerminatedModel.create({_id, owner_id, logic_mark, data, created_at, update_at});
-    //     this.log.info("deleteOne - nft_terminated created " + nft._id + " => " + nftT._id);
-    //     this.assert.ok(nftT, () => `deleteOne error: create terminated nft<${nft._id}> failed`);
-    //     const ret = await NftModel.deleteOne({_id: nft._id});
-    //     this.log.info("deleteOne - nft removed " + nft._id);
-    //     this.assert.ok(ret, () => `deleteOne error: delete nft<${nft._id}> failed`);
-    //     return nftT;
-    // }
-
     /**
      * list all nft of the owner
      * @param {string} ownerId - id of the owner. it can be the user id if the onwner is a player
@@ -80,6 +63,5 @@ export class NftService {
         this.assert.ok(nft, () => `assert nft error : cannot find nft<${nftId}>`);
         return nft!;
     }
-
 
 }

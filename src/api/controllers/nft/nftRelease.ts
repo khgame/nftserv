@@ -1,18 +1,15 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
-import {NftService} from "../../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../../logic/service/logger";
-import {IHoldParams, IReleaseParams, OpHold, OpRelease} from "../../../logic/operation";
+import {IReleaseParams, OpRelease} from "../../../logic/operation";
 
 @API("/nft/release")
 export class NftReleaseController {
 
     log = genLogger("api:nft:release");
 
-    constructor(
-        public readonly nft: NftService,
-        public readonly opRelease: OpRelease) {
+    constructor(public readonly opRelease: OpRelease) {
     }
 
     @Post("/prepare")

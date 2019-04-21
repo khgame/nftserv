@@ -1,9 +1,8 @@
 import {API} from "../../decorators";
-import {Authorized, Body, Ctx, CurrentUser, Get, Param, Post} from "routing-controllers";
-import {NftService} from "../../../logic/nft";
+import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
 import {Context} from "koa";
 import {genLogger} from "../../../logic/service/logger";
-import {IIssueParams, OpIssue} from "../../../logic/operation/index";
+import {IIssueParams, OpIssue} from "../../../logic/operation";
 
 
 @API("/nft/issue")
@@ -11,9 +10,7 @@ export class NftIssueController {
 
     log = genLogger("api:nft:issue");
 
-    constructor(
-        public readonly nft: NftService,
-        public readonly opIssue: OpIssue) {
+    constructor(public readonly opIssue: OpIssue) {
     }
 
     @Post("/prepare")

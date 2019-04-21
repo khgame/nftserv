@@ -1,6 +1,5 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
-import {NftService} from "../../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../../logic/service/logger";
 import {IBurnParams, OpBurn} from "../../../logic/operation";
@@ -10,9 +9,7 @@ export class NftBurnController {
 
     log = genLogger("api:nft:burn");
 
-    constructor(
-        public readonly nft: NftService,
-        public readonly opBurn: OpBurn) {
+    constructor(public readonly opBurn: OpBurn) {
     }
 
     @Post("/prepare")

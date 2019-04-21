@@ -1,6 +1,5 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
-import {NftService} from "../../../logic/nft";
 import {Context} from "koa";
 import {genLogger} from "../../../logic/service/logger";
 import {IHoldParams, OpHold} from "../../../logic/operation";
@@ -10,9 +9,7 @@ export class NftHoldController {
 
     log = genLogger("api:nft:hold");
 
-    constructor(
-        public readonly nft: NftService,
-        public readonly opHold: OpHold) {
+    constructor(public readonly opHold: OpHold) {
     }
 
     @Post("/prepare")
