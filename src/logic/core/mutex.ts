@@ -1,11 +1,11 @@
 import {redisLock, redisUnlock} from "../../service/redis";
-import {createLogger, Logger} from "winston";
 import {genLogger} from "../../service/logger";
+import {Logger} from "winston";
 
 let _log: Logger;
 function log() {
     if (_log) { return _log; }
-    _log = genLogger("core");
+    _log = genLogger("core:mutex");
     return _log;
 }
 

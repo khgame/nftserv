@@ -3,8 +3,6 @@ import {Get, Param} from "routing-controllers";
 import {NftService} from "../../../logic/nft";
 import {genLogger} from "../../../service/logger";
 
-const log = genLogger("api:nft");
-
 @API("/nft/info")
 export class NftInfoController {
 

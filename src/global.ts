@@ -10,6 +10,7 @@ export class Global {
             return;
         }
 
+
         path = Path.isAbsolute(path) ? path : Path.resolve(process.cwd(), path);
         if (!fs.existsSync(path)) {
             throw new Error(`conf file at path(${path}) cannot be found`);

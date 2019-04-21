@@ -5,10 +5,10 @@ import {Context} from "koa";
 import {genLogger} from "../../service/logger";
 import {OpCreatorService} from "../../logic/opCreator";
 
-const log = genLogger("api:nft");
-
 @API("/nft")
 export class NftController {
+
+    log = genLogger("api:nft");
 
     constructor(
         public readonly nft: NftService,

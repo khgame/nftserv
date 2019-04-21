@@ -18,7 +18,7 @@ const objectToArray = (dict: any): any[] =>
 export class ApiApplication {
     private api: Koa;
     public server: Server;
-    public apiSlowLog: Logger = genLogger("apiSlowLog")
+    public apiSlowLog: Logger = genLogger("api:slow-log");
 
     constructor() {
         this.api = new Koa();
