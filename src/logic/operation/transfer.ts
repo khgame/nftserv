@@ -1,10 +1,12 @@
 import {Operation, retError, retNft} from "./base";
-import {IBurnParams, IIssueParams, IOp, ITransferParams, NftModel, NftTerminatedModel, OpCode} from "../model";
-import {OpError} from "./constant";
+import {IOp, NftModel} from "../model";
+import {ITransferParams, OpCode, OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Service} from "typedi";
 
-export class OpTransfer extends Operation<IBurnParams> {
+@Service()
+export class OpTransfer extends Operation<ITransferParams> {
 
     log: Logger = genLogger("op:transfer");
 

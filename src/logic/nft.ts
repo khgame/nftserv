@@ -1,5 +1,5 @@
 import {Service} from "typedi";
-import {INft, NftModel, NftTerminatedModel, OpCode} from "./model";
+import {INft, NftModel, NftTerminatedModel} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";

@@ -1,12 +1,12 @@
 import {Service} from "typedi";
 import {OpService} from "./op";
 import {LockService} from "./lock";
-import {OpCode} from "./model";
 import {genLogger} from "./service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
 import {Assert, genAssert} from "./service/assert";
 import {nftMutex} from "./core/mutex";
+import {OpCode} from "./operation";
 
 @Service()
 export class OpCreatorService {

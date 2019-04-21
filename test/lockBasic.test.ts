@@ -7,8 +7,9 @@ import {spawn, exec, ChildProcess} from 'child_process';
 import {createReq, itGet, itPost} from './createReq';
 import {initServices, waitForLoginSvrAlive} from "../src/logic/service";
 import {ObjectId} from "bson";
-import {LockStatus, OpCode, OpStatus} from "../src/logic/model";
+import {LockStatus} from "../src/logic/model";
 import {forMs} from "kht";
+import {OpCode, OpStatus} from "../src/logic/operation";
 
 
 /**

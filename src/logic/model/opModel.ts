@@ -1,52 +1,15 @@
 import * as mongoose from "mongoose";
 import {Document, Schema} from "mongoose";
 import {ObjectID} from "bson";
-
-export enum OpCode {
-    NONE = 0,
-    ISSUE = 1,
-    BURN = 2,
-    UPDATE = 3,
-    TRANSFER = 4,
-    HOLD = 5,
-    RELEASE = 6,
-}
-
-export enum OpStatus {
-    INITIALED = 0,
-    PREPARED = 1,
-    COMMITTED = 2,
-    ABORTED = 11,
-    TIMEOUT = 12,
-}
-
-export interface IIssueParams {
-    owner_id: string;
-    logic_mark: string;
-    data: any;
-}
-
-export interface IBurnParams {
-
-}
-
-export interface IHoldParams {
-
-}
-
-export interface IReleaseParams {
-
-}
-
-export interface IUpdateParams {
-    data: any;
-}
-
-export interface ITransferParams {
-    from: any;
-    to: any;
-    memo: any;
-}
+import {
+    IBurnParams, IHoldParams,
+    IIssueParams,
+    IReleaseParams,
+    ITransferParams,
+    IUpdateParams,
+    OpCode,
+    OpStatus
+} from "../operation";
 
 export interface IOp extends Document {
 

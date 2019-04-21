@@ -1,14 +1,11 @@
 import {Operation, retError, retNft} from "./base";
-import {
-    IOp, IReleaseParams,
-    IUpdateParams,
-    NftModel,
-    OpCode
-} from "../model";
-import {OpError} from "./constant";
+import {IOp, NftModel} from "../model";
+import {IReleaseParams, OpCode, OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Service} from "typedi";
 
+@Service()
 export class OpRelease extends Operation<IReleaseParams> {
 
     log: Logger = genLogger("op:release");
@@ -31,7 +28,7 @@ export class OpRelease extends Operation<IReleaseParams> {
         return OpError.NONE;
     }
 
-    async save(op: IOp, params: IUpdateParams): Promise<retError | retNft> {
+    async save(op: IOp, params: IReleaseParams): Promise<retError | retNft> {
         const nft = await NftModel.findOneAndUpdate(
             {_id: op.nft_id},
             {$set: {holder: ''}}

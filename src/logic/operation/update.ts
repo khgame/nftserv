@@ -1,16 +1,12 @@
 import {Operation, retError, retNft} from "./base";
-import {
-    IBurnParams,
-    IOp,
-    IUpdateParams,
-    NftModel,
-    OpCode
-} from "../model";
-import {OpError} from "./constant";
+import {IOp, NftModel} from "../model";
+import {IUpdateParams, OpCode, OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Service} from "typedi";
 
-export class OpUpdate extends Operation<IBurnParams> {
+@Service()
+export class OpUpdate extends Operation<IUpdateParams> {
 
     log: Logger = genLogger("op:update");
 

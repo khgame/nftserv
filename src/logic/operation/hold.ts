@@ -1,15 +1,11 @@
 import {Operation, retError, retNft} from "./base";
-import {
-    IHoldParams,
-    IOp,
-    IUpdateParams,
-    NftModel,
-    OpCode
-} from "../model";
-import {OpError} from "./constant";
+import {IOp, NftModel} from "../model";
+import {IHoldParams, OpCode, OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Service} from "typedi";
 
+@Service()
 export class OpHold extends Operation<IHoldParams> {
 
     log: Logger = genLogger("op:hold");
@@ -29,7 +25,7 @@ export class OpHold extends Operation<IHoldParams> {
         return OpError.NONE;
     }
 
-    async save(op: IOp, params: IUpdateParams): Promise<retError | retNft> {
+    async save(op: IOp, params: IHoldParams): Promise<retError | retNft> {
         const nft = await NftModel.findOneAndUpdate(
             {_id: op.nft_id},
             {$set: {holder: op.creator}}

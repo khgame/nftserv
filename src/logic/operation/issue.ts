@@ -1,9 +1,11 @@
 import {Operation, retError, retNft} from "./base";
-import {IIssueParams, IOp, NftModel, NftTerminatedModel, OpCode} from "../model";
-import {OpError} from "./constant";
+import {IOp, NftModel, NftTerminatedModel} from "../model";
+import {IIssueParams, OpCode, OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Service} from "typedi";
 
+@Service()
 export class OpIssue extends Operation<IIssueParams> {
 
     log: Logger = genLogger("op:issue");
