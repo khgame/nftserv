@@ -25,7 +25,7 @@ export class OpTransfer extends Operation<IBurnParams> {
             return OpError.NFT_ARE_HOLD_BY_OTHER_SERVICE;
         }
         if (nft.owner_id !== from) {
-            return OpError.TRANSFER_NFT_ARENT_BELONG_TO_THE_USER;
+            return OpError.TRANSFER_NFT_ARE_NOT_BELONG_TO_THE_USER;
         }
         return OpError.NONE;
     }

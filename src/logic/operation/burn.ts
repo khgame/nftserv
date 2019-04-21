@@ -35,7 +35,7 @@ export class OpBurn extends Operation<IBurnParams> {
             _id, owner_id, logic_mark, data, created_at, update_at
         });
         if (!nftT) {
-            return {error: OpError.BURN_DB_CREATE_NFTT_FAILED};
+            return {error: OpError.BURN_DB_CREATE_TERMINATED_NFT_FAILED};
         }
         this.log.info("burn - nft_terminated created " + op.nft_id + " => " + nftT._id);
 

@@ -28,9 +28,19 @@ export abstract class Operation<TParams> {
         if (0 !== error) {
             return {error};
         }
-        const opOrg = await OpModel.findOne({nft_id: nftId});
+        const opOrg = await OpModel.findOne({nft_id: nftId, state: OpStatus.PREPARED});
         if (opOrg) {
-            return {error: OpError.PREPARE_OP_ALREADY_EXIST};
+            if (opOrg.created_at.getTime() + 1000 * 60 < Date.now()) {
+                const opTimeout = await OpModel.findOneAndUpdate(
+                    {_id: opOrg._id},
+                    {$set: {state: OpStatus.TIMEOUT}}
+                );
+                if (!opTimeout || opTimeout.state !== OpStatus.TIMEOUT) {
+                    return {error: OpError.PREPARE_DB_TRY_TIME_OUT_FAILED};
+                }
+            } else {
+                return {error: OpError.PREPARE_OP_ALREADY_EXIST};
+            }
         }
         const op = await OpModel.create({
             nft_id: nftId,

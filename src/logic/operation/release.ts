@@ -23,7 +23,7 @@ export class OpRelease extends Operation<IReleaseParams> {
             return OpError.NFT_NOT_ALIVE;
         }
         if (!nft.holder) {
-            return OpError.RELEASE_NFT_ARE_NOT_HOLDED;
+            return OpError.RELEASE_NFT_ARE_NOT_HOLD;
         }
         if (nft.holder !== creator) {
             return OpError.NFT_ARE_HOLD_BY_OTHER_SERVICE;
