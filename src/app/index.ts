@@ -3,7 +3,7 @@ import {Global} from "../global";
 import {ApiApplication} from "../api";
 import * as Path from 'path';
 import * as fs from "fs-extra";
-import {initServices} from "../logic/service";
+import {initServices} from "../service";
 
 async function main() {
     commander.version('0.1.0')

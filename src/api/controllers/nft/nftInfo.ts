@@ -1,7 +1,7 @@
 import {API} from "../../decorators";
 import {Get, Param} from "routing-controllers";
 import {NftService} from "../../../logic/nft";
-import {genLogger} from "../../../logic/service/logger";
+import {genLogger} from "../../../service/logger";
 
 const log = genLogger("api:nft");
 

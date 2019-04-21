@@ -1,10 +1,10 @@
 import {Service} from "typedi";
-import {redisLock, redisUnlock} from "./service/redis";
+import {redisLock, redisUnlock} from "../service/redis";
 import {ObjectID} from "mongodb";
 import {ILock, LockModel, LockStatus, LockTerminatedModel} from "./model";
-import {genLogger} from "./service/logger";
+import {genLogger} from "../service/logger";
 import {Logger} from "winston";
-import {Assert, genAssert} from "./service/assert";
+import {Assert, genAssert} from "../service/assert";
 
 @Service()
 export class LockService {

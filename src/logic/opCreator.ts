@@ -1,10 +1,10 @@
 import {Service} from "typedi";
 import {OpService} from "./op";
 import {LockService} from "./lock";
-import {genLogger} from "./service/logger";
+import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
-import {Assert, genAssert} from "./service/assert";
+import {Assert, genAssert} from "../service/assert";
 import {nftMutex} from "./core/mutex";
 import {OpCode} from "./operation";
 

@@ -1,6 +1,6 @@
-import {redisLock, redisUnlock} from "../service/redis";
+import {redisLock, redisUnlock} from "../../service/redis";
 import {createLogger, Logger} from "winston";
-import {genLogger} from "../service/logger";
+import {genLogger} from "../../service/logger";
 
 let _log: Logger;
 function log() {

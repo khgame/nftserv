@@ -1,9 +1,9 @@
 import {Service} from "typedi";
 import {INft, NftModel, NftTerminatedModel} from "./model";
-import {genLogger} from "./service/logger";
+import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
-import {Assert, genAssert} from "./service/assert";
+import {Assert, genAssert} from "../service/assert";
 
 @Service()
 export class NftService {

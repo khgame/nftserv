@@ -5,7 +5,7 @@ import {Global} from "../src/global";
 import {spawn, exec, ChildProcess} from 'child_process';
 
 import {createReq} from './createReq';
-import {initServices, waitForLoginSvrAlive} from "../src/logic/service";
+import {initServices, waitForLoginSvrAlive} from "../src/service";
 import {ObjectId} from "bson";
 import {forMs} from "kht";
 import {OpCode} from "../src/logic/operation";

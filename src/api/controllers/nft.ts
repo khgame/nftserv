@@ -2,7 +2,7 @@ import {API} from "../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Get, Param, Post} from "routing-controllers";
 import {NftService} from "../../logic/nft";
 import {Context} from "koa";
-import {genLogger} from "../../logic/service/logger";
+import {genLogger} from "../../service/logger";
 import {OpCreatorService} from "../../logic/opCreator";
 
 const log = genLogger("api:nft");

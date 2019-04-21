@@ -8,7 +8,7 @@ import * as controllers from "./controllers/index";
 
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
-import {getGameServers, getOnlineState} from "../logic/service";
+import {getGameServers, getOnlineState} from "../service";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);

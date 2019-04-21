@@ -1,4 +1,4 @@
-import {Global} from "../../global";
+import {Global} from "../global";
 import {http} from "./rpc";
 import {forCondition} from "kht";
 

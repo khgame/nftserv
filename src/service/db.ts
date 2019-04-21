@@ -16,7 +16,7 @@
 // };
 
 import * as mongoose from "mongoose";
-import {Global} from "../../global";
+import {Global} from "../global";
 
 export function initDB() {
     const {host, port, database, username, password} = Global.conf.mongo;

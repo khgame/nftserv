@@ -1,7 +1,7 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
 import {Context} from "koa";
-import {genLogger} from "../../../logic/service/logger";
+import {genLogger} from "../../../service/logger";
 import {IHoldParams, OpHold} from "../../../logic/operation";
 
 @API("/nft/hold")

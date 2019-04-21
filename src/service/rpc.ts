@@ -1,5 +1,5 @@
 import axios, {AxiosInstance} from "axios";
-import {Global} from "../../global";
+import {Global} from "../global";
 
 let axiosInstance: AxiosInstance;
 // $http.interceptors.response.use((response) => {

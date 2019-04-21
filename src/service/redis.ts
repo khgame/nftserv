@@ -1,4 +1,4 @@
-import {Global} from "../../global";
+import {Global} from "../global";
 import * as IORedis from "ioredis";
 import {forMs} from "kht";
 
