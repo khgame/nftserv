@@ -1,10 +1,10 @@
 import {Operation, retError, retNft} from "./base";
 import {IBurnParams, IIssueParams, IOp, NftModel, NftTerminatedModel, OpCode} from "../model";
-import {OpError} from "./errorCode";
+import {OpError} from "./constant";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 
-class OpBurn extends Operation<IBurnParams> {
+export class OpBurn extends Operation<IBurnParams> {
 
     log: Logger = genLogger("op:burn");
 
@@ -16,6 +16,9 @@ class OpBurn extends Operation<IBurnParams> {
         const nft = await NftModel.findOne({_id: nftId});
         if (!nft) {
             return OpError.NFT_NOT_ALIVE;
+        }
+        if (nft.holder && nft.holder !== creator) {
+            return OpError.NFT_ARE_HOLD_BY_OTHER_SERVICE;
         }
         return OpError.NONE;
     }

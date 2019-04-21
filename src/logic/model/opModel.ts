@@ -30,6 +30,14 @@ export interface IBurnParams {
 
 }
 
+export interface IHoldParams {
+
+}
+
+export interface IReleaseParams {
+
+}
+
 export interface IUpdateParams {
     data: any;
 }
@@ -65,7 +73,7 @@ export interface IOp extends Document {
     /**
      * params of this operation
      */
-    params: IIssueParams | IBurnParams | IUpdateParams | ITransferParams ;
+    params: IIssueParams | IBurnParams | IUpdateParams | ITransferParams | IHoldParams | IReleaseParams ;
 
     /**
      * create time

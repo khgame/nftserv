@@ -22,6 +22,11 @@ export interface INft extends Document {
     data: any;
 
     /**
+     * holder's identity
+     */
+    holder: string;
+
+    /**
      * create time
      */
     created_at: Date;
@@ -37,6 +42,7 @@ const NftSchema = new Schema({
     owner_id: {type: String},
     logic_mark: {type: String, required: true},
     data: {type: Object, required: true},
+    holder: {type: String, required: false},
     created_at: {type: Date},
     update_at: {type: Date},
 });

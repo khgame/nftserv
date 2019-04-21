@@ -1,6 +1,7 @@
 export enum OpError {
     NONE = 0x000,
     NFT_NOT_ALIVE = 0x001,
+    NFT_ARE_HOLD_BY_OTHER_SERVICE = 0x002,
 
     PREPARE_OP_ALREADY_EXIST = 0x011,
     PREPARE_DB_FAILED = 0x011,
@@ -25,4 +26,9 @@ export enum OpError {
     TRANSFER_DB_FAILED = 0x133,
 
     UPDATE_DB_FAILED = 0x141,
+
+    HOLD_DB_FAILED = 0x151,
+
+    RELEASE_NFT_ARE_NOT_HOLDED = 0x161,
+    RELEASE_DB_FAILED = 0x162,
 }

@@ -1,6 +1,6 @@
 import {INft, IOp, OpCode, OpStatus} from "../model/";
 import {OpModel} from "../model";
-import {OpError} from "./errorCode";
+import {OpError} from "./constant";
 import {nftMutex} from "../core/mutex";
 
 export type retError = { error: OpError };
