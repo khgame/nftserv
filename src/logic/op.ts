@@ -1,10 +1,6 @@
 import {Service} from "typedi";
 import {ObjectID} from 'mongodb';
-import {
-    INft,
-    NftModel,
-    NftTerminatedModel, OpModel,
-} from "./model";
+import {INft, NftModel, NftTerminatedModel, OpModel} from "./model";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 import {IOp} from "./model";

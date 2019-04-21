@@ -9,6 +9,8 @@ import * as controllers from "./controllers/index";
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
 import {getGameServers, getOnlineState} from "../service";
+import {genLogger} from "../service/logger";
+import {Logger} from "winston";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
@@ -16,6 +18,7 @@ const objectToArray = (dict: any): any[] =>
 export class ApiApplication {
     private api: Koa;
     public server: Server;
+    public apiSlowLog: Logger = genLogger("apiSlowLog")
 
     constructor() {
         this.api = new Koa();
@@ -25,16 +28,20 @@ export class ApiApplication {
 
     private init() {
         this.api.use(async (ctx: Koa.Context, next: Function) => {
-            try {
-                await next();
-            } catch (error) {
-                ctx.status = 200;
-                const msgCode = Number(error.message || error);
+            const startTime = Date.now();
+            await next();
+            const timeCost = Date.now() - startTime;
 
-                ctx.body = {
-                    statusCode: error.statusCode || 500,
-                    message: isNaN(msgCode) ? (error.message || error) : msgCode,
-                };
+            if (timeCost > 5000) {
+                this.apiSlowLog.error(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
+            }else if (timeCost > 2000) {
+                this.apiSlowLog.warn(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
+            }else if (timeCost > 1000) {
+                this.apiSlowLog.info(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
+            }else if (timeCost > 300) {
+                this.apiSlowLog.debug(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
+            }else if (timeCost > 100) {
+                this.apiSlowLog.verbose(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
             }
         });
 
