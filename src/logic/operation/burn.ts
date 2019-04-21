@@ -9,13 +9,13 @@ class OpBurn extends Operation<IBurnParams> {
     log: Logger = genLogger("op:burn");
 
     get opCode(): OpCode {
-        return OpCode.ISSUE;
+        return OpCode.BURN;
     }
 
-    async validate(creator: string, nftId: string, params: IIssueParams): Promise<OpError> {
+    async validate(creator: string, nftId: string, params: IBurnParams): Promise<OpError> {
         const nft = await NftModel.findOne({_id: nftId});
         if (!nft) {
-            return OpError.BURN_NFT_NOT_ALIVE;
+            return OpError.NFT_NOT_ALIVE;
         }
         return OpError.NONE;
     }
@@ -23,7 +23,7 @@ class OpBurn extends Operation<IBurnParams> {
     async save(op: IOp, params: IBurnParams): Promise<retError | retNft> {
         const nftOrg = await NftModel.findOne({_id: op.nft_id});
         if (!nftOrg) {
-            return {error: OpError.BURN_NFT_NOT_ALIVE};
+            return {error: OpError.NFT_NOT_ALIVE};
         }
         const {_id, owner_id, logic_mark, data, created_at, update_at} = nftOrg;
 
