@@ -4,6 +4,8 @@ import * as Path from 'path';
 export class Global {
     static conf: any;
     static confPath: any;
+    static enabled: boolean;
+    static runningRequest: number = 0;
 
     static setConf(path: string, force: boolean) {
         if (!force && Global.conf) {

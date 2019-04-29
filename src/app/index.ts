@@ -6,6 +6,9 @@ import * as fs from "fs-extra";
 import {initServices} from "../service";
 
 async function main() {
+
+    let api: ApiApplication;
+
     commander.version('0.1.0')
         .command('start')
         .description('start running nft service')
@@ -29,7 +32,7 @@ async function main() {
 
             console.log("config path :", Global.confPath);
             Global.conf.port = (options && options.port) || Global.conf.port || 11801;
-            const api = new ApiApplication();
+            api = new ApiApplication();
             await initServices();
             api.start(Global.conf.port);
         });
@@ -45,6 +48,13 @@ async function main() {
         });
 
     commander.parse(process.argv);
+
+    process.on('SIGINT', async () => {
+        console.log('\n★★ SIGINT received, please hold ★★ ');
+        await api.shutdown();
+        console.log('★★ process exited ★★ ');
+        process.exit(0);
+    });
 }
 
 main().then(() => {

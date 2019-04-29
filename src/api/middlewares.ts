@@ -1,10 +1,16 @@
 import * as Koa from "koa";
 import * as bodyParser from "koa-bodyparser";
 import * as logger from "koa-logger";
+import {Global} from "../global";
 
 async function catchError(ctx: Koa.Context, next: Function) {
+    Global.runningRequest += 1;
     try {
-        await next();
+        if (Global.enabled) {
+            await next();
+        }else {
+            ctx.status = 403;
+        }
     } catch (error) {
         ctx.status = 200;
         const msgCode = Number(error.message || error);
@@ -14,6 +20,7 @@ async function catchError(ctx: Koa.Context, next: Function) {
             message: isNaN(msgCode) ? (error.message || error) : msgCode,
         };
     }
+    Global.runningRequest -= 1;
 }
 
 const apply: { [key: string]: () => Koa.Middleware[] } = {
@@ -25,7 +32,6 @@ const apply: { [key: string]: () => Koa.Middleware[] } = {
         catchError,
         bodyParser(),
         logger(),
-
     ]
 };
 

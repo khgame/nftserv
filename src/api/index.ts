@@ -11,6 +11,8 @@ import {createServer, Server} from "http";
 import {getGameServers, getOnlineState} from "../service";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
+import {Global} from "../global";
+import {forCondition, forMs} from "kht/lib";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
@@ -98,5 +100,26 @@ export class ApiApplication {
         return this.api.listen(port, (): void => {
             console.log(`Koa server has started, running at: http://127.0.0.1:${port}. `);
         });
+    }
+
+    public async shutdown() {
+        console.log("※※ start shutdown application ※※");
+
+        Global.enabled = false;
+        console.log("\t- abort all new requests ✓");
+        await forMs(1);
+
+        await forCondition(() => Global.runningRequest <= 0, 100);
+        console.log("\t- check until no api request ✓");
+
+        // waiting for service stop
+        // await forMs(1000);
+        // console.log("\t- close services ✓");
+
+        this.server.close();
+        console.log("\t- close server ✓");
+
+        await forMs(1);
+        console.log("※※ application exited ※※");
     }
 }

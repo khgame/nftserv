@@ -11,7 +11,7 @@
 
 "@khgame/loginsvr@^0.1.2":
   version "0.1.2"
-  resolved "http://registry.npm.taobao.org/@khgame/loginsvr/download/@khgame/loginsvr-0.1.2.tgz#005ea5f8705427c52956541cca548139d90891c2"
+  resolved "https://registry.npm.taobao.org/@khgame/loginsvr/download/@khgame/loginsvr-0.1.2.tgz#005ea5f8705427c52956541cca548139d90891c2"
   integrity sha1-AF6l+HBUJ8UpVlQcylSBOdkIkcI=
   dependencies:
     axios "^0.18.0"
@@ -2337,7 +2337,26 @@ mongoose-legacy-pluralize@1.0.2:
   resolved "http://registry.npm.taobao.org/mongoose-legacy-pluralize/download/mongoose-legacy-pluralize-1.0.2.tgz#3ba9f91fa507b5186d399fb40854bff18fb563e4"
   integrity sha1-O6n5H6UHtRhtOZ+0CFS/8Y+1Y+Q=
 
-mongoose@^5.5.0, mongoose@^5.5.1:
+mongoose@^5.5.0:
+  version "5.5.2"
+  resolved "http://registry.npm.taobao.org/mongoose/download/mongoose-5.5.2.tgz#6fa985ffe036e7cb641f7234465d7f162f14f827"
+  integrity sha1-b6mF/+A258tkH3I0Rl1/Fi8U+Cc=
+  dependencies:
+    async "2.6.1"
+    bson "~1.1.1"
+    kareem "2.3.0"
+    mongodb "3.2.2"
+    mongodb-core "3.2.2"
+    mongoose-legacy-pluralize "1.0.2"
+    mpath "0.5.1"
+    mquery "3.2.0"
+    ms "2.1.1"
+    regexp-clone "0.0.1"
+    safe-buffer "5.1.2"
+    sift "7.0.1"
+    sliced "1.0.1"
+
+mongoose@^5.5.1:
   version "5.5.1"
   resolved "http://registry.npm.taobao.org/mongoose/download/mongoose-5.5.1.tgz#a256a08241a1412bb307b85e7ece25629d0b4bbe"
   integrity sha1-olaggkGhQSuzB7hefs4lYp0LS74=
