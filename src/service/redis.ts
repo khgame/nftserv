@@ -33,7 +33,7 @@ export const redisLock =
             ret = await Promise.resolve(redis().send_command("set", redisKey, lockerIdentity, "PX", lockTime, "NX"));
         } while (ret !== "OK" || !bWaitForLock || (await forMs(5 * redisLockCount[key]) && false));
         redisLockCount[key] -= 1;
-        return 'OK' === ret;
+        return "OK" === ret;
     };
 
 export const redisUnlock =

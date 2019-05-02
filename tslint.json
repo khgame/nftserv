@@ -13,6 +13,7 @@
       true,
       "check-space"
     ],
+    "quotemark": true,
     "forin": false,
     "indent": [true, "spaces", 4],
     "interface-name": true,

@@ -17,9 +17,9 @@ export const http = () => {
             responseType: "json", // default
             timeout: 30000,
             headers: {
-                'server_id':  Global.conf.server_id,
-                'server_hash':  Global.conf.server_hash,
-                'Content-Type': 'application/json',
+                "server_id":  Global.conf.server_id,
+                "server_hash":  Global.conf.server_hash,
+                "Content-Type": "application/json",
             },
         });
 

@@ -1,5 +1,5 @@
 import {Service} from "typedi";
-import {ObjectID} from 'mongodb';
+import {ObjectID} from "mongodb";
 import {INft, NftModel, NftTerminatedModel, OpModel} from "./model";
 import {genLogger} from "../service/logger";
 import {Logger} from "winston";
@@ -55,7 +55,7 @@ export class OpService {
         params: IIssueParams | IBurnParams | IUpdateParams | ITransferParams
     ) {
         if (!opId || opId.length !== 24) {
-            throw new Error('create op error: opId must be a single String of 24 hex character');
+            throw new Error("create op error: opId must be a single String of 24 hex character");
         }
         switch (opCode) {
             case OpCode.ISSUE:

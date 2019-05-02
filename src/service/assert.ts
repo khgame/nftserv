@@ -15,8 +15,8 @@ export class Assert {
         if (condition) {
             return;
         }
-        let msgStr: string = '';
-        if (typeof msg === 'string'){
+        let msgStr: string = "";
+        if (typeof msg === "string"){
             msgStr = msg;
             msg = new Error(msgStr);
         } else if (msg instanceof Error) {

@@ -23,7 +23,7 @@ export class NftService {
      * @return {Promise<module:mongoose.DocumentQuery<INft[], INft> & {}>}
      */
     async list(ownerId: string, logicMark: string = "") {
-        this.assert.ok(ownerId, 'get nft error: ownerId cannot be empty');
+        this.assert.ok(ownerId, "get nft error: ownerId cannot be empty");
         try {
             return logicMark ?
                 NftModel.find({logic_mark: logicMark, owner_id: ownerId}) :
@@ -40,7 +40,7 @@ export class NftService {
      * @return {Promise<any>}
      */
     async get(nftId: string): Promise<INft | null> { // todo: also get from the trash can ?
-        this.assert.ok(nftId, 'get nft error: nftId cannot be empty');
+        this.assert.ok(nftId, "get nft error: nftId cannot be empty");
         try {
             const _id = ObjectID.createFromHexString(nftId);
             return await NftModel.findOne({_id});

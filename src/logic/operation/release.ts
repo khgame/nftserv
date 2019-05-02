@@ -31,7 +31,7 @@ export class OpRelease extends Operation<IReleaseParams> {
     async save(op: IOp, params: IReleaseParams): Promise<retError | retNft> {
         const nft = await NftModel.findOneAndUpdate(
             {_id: op.nft_id},
-            {$set: {holder: ''}}
+            {$set: {holder: ""}}
         );
         if (!nft) {
             return {error: OpError.RELEASE_DB_FAILED};

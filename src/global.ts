@@ -1,5 +1,5 @@
 import * as fs from "fs-extra";
-import * as Path from 'path';
+import * as Path from "path";
 
 export class Global {
     static conf: any;

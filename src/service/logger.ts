@@ -16,12 +16,12 @@ function ensureLogDir(folder?: string): string {
 }
 
 function createFileTransport(label: string) {
-    const nameSpace = label ? label.split(':')[0] : '';
+    const nameSpace = label ? label.split(":")[0] : "";
     return new DailyRotateFile({
         level: "verbose",
         filename: `${ensureLogDir()}/[nftserv]${
             Global.conf.server_id}#${Global.conf.server_hash}@${Global.conf.port
-            }/${nameSpace.replace(/[:,&|]/g, '-')}@%DATE%.log`,
+            }/${nameSpace.replace(/[:,&|]/g, "-")}@%DATE%.log`,
         datePattern: "YYYY-MM-DD",
         zippedArchive: true,
         maxSize: "40m",
@@ -52,7 +52,7 @@ export const genLogger = (label: string = "") => {
                 ),
             }),
             createFileTransport(label),
-            createFileTransport('main')
+            createFileTransport("main")
         ],
     });
 };
