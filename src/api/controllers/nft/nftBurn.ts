@@ -1,8 +1,8 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
 import {Context} from "koa";
-import {genLogger} from "../../../service/logger";
 import {IBurnParams, OpBurn} from "../../../logic/operation";
+import {genLogger} from "@khgame/turtle/lib";
 
 @API("/nft/burn")
 export class NftBurnController {

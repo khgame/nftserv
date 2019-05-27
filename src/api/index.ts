@@ -8,19 +8,26 @@ import * as controllers from "./controllers/index";
 
 import {useMiddlewares} from "./middlewares";
 import {createServer, Server} from "http";
-import {getGameServers, getOnlineState} from "../service";
-import {genLogger} from "../service/logger";
 import {Logger} from "winston";
-import {Global} from "../global";
 import {forCondition, forMs} from "kht/lib";
+import {APIRunningState, genLogger, IApi} from "@khgame/turtle/lib";
+import {getGameServers, getOnlineState} from "../service/login";
+import {Context} from "koa";
 
 const objectToArray = (dict: any): any[] =>
     Object.keys(dict).map((name) => dict[name]);
 
-export class ApiApplication {
+export class ApiApplication implements IApi {
+
     private api: Koa;
     public server: Server;
+    public log: Logger = genLogger("api:api");
     public apiSlowLog: Logger = genLogger("api:slow-log");
+
+    public enabled: boolean = true;
+    public runningRequest: number = 0;
+
+    public runningState: APIRunningState = APIRunningState.NONE;
 
     constructor() {
         this.api = new Koa();
@@ -36,15 +43,35 @@ export class ApiApplication {
 
             if (timeCost > 5000) {
                 this.apiSlowLog.error(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
-            }else if (timeCost > 2000) {
+            } else if (timeCost > 2000) {
                 this.apiSlowLog.warn(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
-            }else if (timeCost > 1000) {
+            } else if (timeCost > 1000) {
                 this.apiSlowLog.info(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
-            }else if (timeCost > 300) {
+            } else if (timeCost > 300) {
                 this.apiSlowLog.debug(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
-            }else if (timeCost > 100) {
+            } else if (timeCost > 100) {
                 this.apiSlowLog.verbose(`${ctx.request.originalUrl}, cost ${timeCost}ms`);
             }
+        });
+
+        this.api.use(async (ctx: Context, next: (...args: any[]) => any) => {
+            this.runningRequest += 1;
+            try {
+                if (this.enabled) {
+                    await next();
+                } else {
+                    ctx.status = 403;
+                }
+            } catch (error) {
+                ctx.status = 200;
+                const msgCode = Number(error.message || error);
+                ctx.body = {
+                    statusCode: error.statusCode || 500,
+                    message: isNaN(msgCode) ? (error.message || error) : msgCode,
+                };
+                this.log.error(error);
+            }
+            this.runningRequest -= 1;
         });
 
         useMiddlewares(this.api, process.env.NODE_ENV || "development");
@@ -96,30 +123,50 @@ export class ApiApplication {
         useContainer(Container);
     }
 
-    public start(port: number): Server {
-        return this.api.listen(port, (): void => {
-            console.log(`Koa server has started, running at: http://127.0.0.1:${port}. `);
-        });
+    public async start(port: number) {
+        this.log.info(`※※ Starting Process ※※ ${port}`);
+        console.log(port);
+        this.runningState = APIRunningState.STARTING;
+        try {
+            await this.listen(port);
+            this.runningState = APIRunningState.RUNNING;
+            this.log.info(`※※ All Process Started ※※`);
+            return true;
+        } catch (e) {
+            this.runningState = APIRunningState.PREPARED;
+            return false;
+        }
     }
 
-    public async shutdown() {
-        console.log("※※ start shutdown application ※※");
+    public async listen(port: number) {
+        await new Promise((resolve, reject) => /** this.server.listen(port, resolve) */ this.server.listen(port, resolve));
+        this.log.info(`\t- Koa server has started ✓ : running with: http://127.0.0.1:${port}. `);
+    }
 
-        Global.enabled = false;
-        console.log("\t- abort all new requests ✓");
-        await forMs(1);
+    public async close() {
+        this.log.info("※※ start shutdown application ※※");
+        this.runningState = APIRunningState.CLOSING;
+        try {
+            this.enabled = false;
+            this.log.info("- abort all new requests ✓");
 
-        await forCondition(() => Global.runningRequest <= 0, 100);
-        console.log("\t- check until no api request ✓");
+            await forCondition(() => this.runningRequest <= 0, 100);
+            this.log.info("- check until no api request ✓");
 
-        // waiting for service stop
-        // await forMs(1000);
-        // console.log("\t- close services ✓");
+            // waiting for service stop
+            // await forMs(1000);
+            // this.log.info("\tclose services ✓");
 
-        this.server.close();
-        console.log("\t- close server ✓");
-
-        await forMs(1);
-        console.log("※※ application exited ※※");
+            this.server.close();
+            this.log.info("- close server ✓");
+            this.log.info("※※ application exited ※※");
+            this.log.close();
+            this.runningState = APIRunningState.CLOSED;
+            return true;
+        } catch (e) {
+            this.log.error(`※※ shutdown application failed ※※ ${e}`);
+            this.runningState = APIRunningState.RUNNING;
+            return false;
+        }
     }
 }

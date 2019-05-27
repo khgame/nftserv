@@ -1,7 +1,7 @@
 import {API} from "../../decorators";
 import {Get, Param} from "routing-controllers";
 import {NftService} from "../../../logic/nft";
-import {genLogger} from "../../../service/logger";
+import {genLogger} from "@khgame/turtle/lib";
 
 @API("/nft/info")
 export class NftInfoController {

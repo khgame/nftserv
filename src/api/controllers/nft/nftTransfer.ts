@@ -1,7 +1,7 @@
 import {API} from "../../decorators";
 import {Authorized, Body, Ctx, CurrentUser, Post} from "routing-controllers";
 import {Context} from "koa";
-import {genLogger} from "../../../service/logger";
+import {genLogger} from "@khgame/turtle/lib";
 import {ITransferParams, OpTransfer} from "../../../logic/operation";
 
 @API("/nft/transfer")

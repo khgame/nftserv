@@ -1,6 +1,7 @@
-import {Global} from "../global";
-import {http} from "./rpc";
+
+import {http} from "@khgame/turtle";
 import {forCondition} from "kht";
+import {turtle} from "@khgame/turtle/lib";
 
 export const waitForLoginSvrAlive = async () => {
     return await forCondition(async () => {
@@ -13,7 +14,7 @@ export const waitForLoginSvrAlive = async () => {
 };
 
 export const getLoginSvrInfo = async () => {
-    const conf = Global.conf.rpc.login;
+    const conf = turtle.rules<any>().rpc.login;
     const ret = await http().get(`${conf.host}${conf.root}${conf.api.info}`).then((rsp) => {
         if (rsp.status !== 200) {
             throw new Error("validator response status error");
@@ -27,7 +28,7 @@ export const getLoginSvrInfo = async () => {
 
 export const getOnlineState = async (sessionId: string) => {
     // console.log("req");
-    const conf = Global.conf.rpc.login;
+    const conf = turtle.rules<any>().rpc.login;
     return await http().get(`${conf.host}${conf.root}${conf.api.online_state}/${sessionId}`)
         .then((rsp) => {
             if (rsp.status !== 200) {
@@ -42,7 +43,7 @@ export const getOnlineState = async (sessionId: string) => {
 
 export const getGameServers = async () => {
     // console.log("req");
-    const conf = Global.conf.rpc.login;
+    const conf = turtle.rules<any>().rpc.login;
     return await http().get(`${conf.host}${conf.root}${conf.api.game_svr_list}`)
         .then((rsp) => {
             if (rsp.status !== 200) {

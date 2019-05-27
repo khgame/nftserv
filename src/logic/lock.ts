@@ -1,10 +1,8 @@
 import {Service} from "typedi";
-import {redisLock, redisUnlock} from "../service/redis";
 import {ObjectID} from "mongodb";
 import {ILock, LockModel, LockStatus, LockTerminatedModel} from "./model";
-import {genLogger} from "../service/logger";
 import {Logger} from "winston";
-import {Assert, genAssert} from "../service/assert";
+import {Assert, genAssert, genLogger, RedisDriver} from "@khgame/turtle/lib";
 
 @Service()
 export class LockService {
@@ -92,7 +90,7 @@ export class LockService {
 
     async vote(nftId: string, serverId: string) { // and nft are locked when it's lock are voted
         // mutex for nftId
-        const lockResult = await redisLock(nftId, "LockService:vote");
+        const lockResult = await RedisDriver.inst.dLock(nftId, "LockService:vote");
         if (!lockResult) {
             throw new Error(`vote error : get mutex of nft<${nftId}> failed`);
         }
@@ -108,10 +106,10 @@ export class LockService {
                 state: LockStatus.PREPARED
             });
 
-            await redisUnlock(nftId, "LockService:vote");
+            await RedisDriver.inst.dUnlock(nftId, "LockService:vote");
             return lock;
         }catch (ex) {
-            await redisUnlock(nftId, "LockService:vote");
+            await RedisDriver.inst.dUnlock(nftId, "LockService:vote");
             throw ex;
         }
     }

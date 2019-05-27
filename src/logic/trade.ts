@@ -1,7 +1,4 @@
 import {Service} from "typedi";
-import {Global} from "../global";
-import {redisLock, redisUnlock} from "../service/redis";
-import {Error} from "tslint/lib/error";
 import {NftService} from "./nft";
 
 @Service() // todo: make trade an agent

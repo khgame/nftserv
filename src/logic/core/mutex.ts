@@ -1,6 +1,5 @@
-import {redisLock, redisUnlock} from "../../service/redis";
-import {genLogger} from "../../service/logger";
 import {Logger} from "winston";
+import {genLogger, turtle, RedisDriver} from "@khgame/turtle/lib";
 
 let _log: Logger;
 function log() {
@@ -20,7 +19,7 @@ export function nftMutex(index: number) {
         descriptor.value = async function (...args: any[]) {
             const nftId = args[index];
             const mutexSign = "NftService:" + methodName;
-            const mutex = await redisLock(nftId, mutexSign);
+            const mutex = await RedisDriver.inst.dLock(nftId, mutexSign);
             if (!mutex) {
                 throw new Error(`${methodName} error : get mutex of nft<${args[index]}> failed`);
             }
@@ -28,11 +27,11 @@ export function nftMutex(index: number) {
             let ret;
             try {
                 ret = originalMethod!.apply(this, args);
-                await redisUnlock(nftId, mutexSign);
+                await RedisDriver.inst.dUnlock(nftId, mutexSign);
                 log().verbose("mutex unlock " + nftId + " by " + mutexSign);
                 return ret;
             } catch (ex) {
-                await redisUnlock(nftId, mutexSign);
+                await RedisDriver.inst.dUnlock(nftId, mutexSign);
                 log().verbose("mutex unlock " + nftId + " by " + mutexSign);
                 throw ex;
             }

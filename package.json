@@ -29,6 +29,7 @@
     }
   ],
   "dependencies": {
+    "@khgame/turtle": "^0.0.11",
     "@types/axios": "^0.14.0",
     "@types/fs-extra": "^5.0.5",
     "@types/ioredis": "^4.0.10",

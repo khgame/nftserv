@@ -1,12 +1,11 @@
 import {Service} from "typedi";
 import {OpService} from "./op";
 import {LockService} from "./lock";
-import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 import {ObjectID} from "bson";
-import {Assert, genAssert} from "../service/assert";
 import {nftMutex} from "./core/mutex";
 import {OpCode} from "./operation";
+import {Assert, genAssert, genLogger} from "@khgame/turtle/lib";
 
 @Service()
 export class OpCreatorService {

@@ -1,9 +1,9 @@
 import {Operation, retError, retNft} from "./base";
 import {IOp, NftModel} from "../model";
 import {IUpdateParams, OpCode, OpError} from "./constant";
-import {genLogger} from "../../service/logger";
 import {Logger} from "winston";
 import {Service} from "typedi";
+import {genLogger} from "@khgame/turtle/lib";
 
 @Service()
 export class OpUpdate extends Operation<IUpdateParams> {

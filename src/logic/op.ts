@@ -1,13 +1,12 @@
 import {Service} from "typedi";
 import {ObjectID} from "mongodb";
 import {INft, NftModel, NftTerminatedModel, OpModel} from "./model";
-import {genLogger} from "../service/logger";
 import {Logger} from "winston";
 import {IOp} from "./model";
-import {Assert, genAssert} from "../service/assert";
 import {LockService} from "./lock";
 import {NftService} from "./nft";
 import {IBurnParams, IIssueParams, ITransferParams, IUpdateParams, OpCode, OpStatus} from "./operation";
+import {Assert, genAssert, genLogger} from "@khgame/turtle/lib";
 
 @Service()
 export class OpService {
